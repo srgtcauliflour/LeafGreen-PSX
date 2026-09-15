@@ -4,6 +4,7 @@ project(leafgreen_psx LANGUAGES C ASM)
 set(LGPSX_SOURCES
     src/main.c
     src/platform/psx/platform_psx.c
+    src/platform/psx/text_psx.c
     src/game/text.c
     src/game/trade_record.c
     src/game/save.c
@@ -30,3 +31,13 @@ psn00bsdk_add_cd_image(
     iso.xml
     DEPENDS leafgreen_psx
 )
+
+option(LGPSX_FONT_DEMO "Embed a locally generated LeafGreen font demo" OFF)
+set(LGPSX_FONT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated/font" CACHE PATH "Local font extraction output")
+if(LGPSX_FONT_DEMO)
+    if(NOT EXISTS "${LGPSX_FONT_DIR}/font_data.h")
+        message(FATAL_ERROR "Run tools/font/extract_font.py with your verified ROM before enabling LGPSX_FONT_DEMO")
+    endif()
+    target_include_directories(leafgreen_psx PRIVATE "${LGPSX_FONT_DIR}")
+    target_compile_definitions(leafgreen_psx PRIVATE LGPSX_FONT_DEMO=1)
+endif()

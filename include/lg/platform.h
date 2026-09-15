@@ -31,4 +31,7 @@ uint32_t lg_platform_frame_counter(void);
 /* Temporary SDK-font bring-up display; not the LeafGreen text renderer. */
 void lg_platform_draw_debug_hud(const LgInputState *input);
 
+void lg_platform_text_init(void);
+void lg_platform_draw_text_demo(void);
+
 #endif

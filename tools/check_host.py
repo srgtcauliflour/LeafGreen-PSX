@@ -18,7 +18,7 @@ def run(args, **kwargs):
 def main():
     env = os.environ.copy()
     env['PYTHONDONTWRITEBYTECODE'] = '1'
-    for suite in ('romverify', 'assets', 'gfxconv'):
+    for suite in ('romverify', 'assets', 'gfxconv', 'font'):
         env['PYTHONPATH'] = str(ROOT / 'tools' / suite)
         run([sys.executable, '-m', 'unittest', 'discover', '-s',
              'tools/' + suite, '-p', 'test_*.py'], env=env)
@@ -26,7 +26,8 @@ def main():
          'tools/assets/leafgreen_rev1.example.json'], env=env)
     compiler = shlex.split(os.environ.get('CC', 'cc'))
     flags = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-Iinclude']
-    modules = {'overworld': 'src/overworld/overworld.c',
+    modules = {'text': 'src/game/text.c',
+               'overworld': 'src/overworld/overworld.c',
                'script': 'src/script/vm.c',
                'trade_record': 'src/game/trade_record.c',
                'save': 'src/game/save.c',
@@ -37,7 +38,7 @@ def main():
             run(compiler + flags + [source, 'tests/host/test_' + name + '.c',
                                     '-o', str(binary)])
             run([str(binary)])
-        for source in ['src/main.c', 'src/game/text.c', *modules.values()]:
+        for source in ['src/main.c', *modules.values()]:
             run(compiler + flags + ['-c', source, '-o',
                                     str(Path(temp) / (Path(source).stem + '.o'))])
     print('PASS: all host checks (PS1 backend/runtime not validated).')
