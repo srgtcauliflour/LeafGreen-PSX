@@ -24,7 +24,9 @@ jobs:
         run: cc -std=c11 -Wall -Wextra -Werror -Iinclude src/script/vm.c tests/host/test_script.c -o /tmp/test_script && /tmp/test_script
       - name: Host LGTR record test
         run: cc -std=c11 -Wall -Wextra -Werror -Iinclude src/game/trade_record.c tests/host/test_trade_record.c -o /tmp/test_trade && /tmp/test_trade
+      - name: Host save envelope test
+        run: cc -std=c11 -Wall -Wextra -Werror -Iinclude src/game/save.c tests/host/test_save.c -o /tmp/test_save && /tmp/test_save
       - name: Host resource index test
         run: cc -std=c11 -Wall -Wextra -Werror -Iinclude src/game/resource.c tests/host/test_resource.c -o /tmp/test_resource && /tmp/test_resource
       - name: Compile portable modules with warnings as errors
-        run: cc -std=c11 -Wall -Wextra -Werror -Iinclude -c src/game/text.c src/game/trade_record.c src/game/resource.c src/overworld/overworld.c src/script/vm.c
+        run: cc -std=c11 -Wall -Wextra -Werror -Iinclude -c src/game/text.c src/game/trade_record.c src/game/save.c src/game/resource.c src/overworld/overworld.c src/script/vm.c
