@@ -20,7 +20,7 @@ The final protocol must prevent accidental duplication, corruption and replay as
 
 ## Hardware constraints
 
-A standard PS1 memory card is 128 KiB, divided into 16 blocks of 8 KiB, with block 0 used for card metadata/directory information. Low-level transfers operate on 128-byte sectors. The eventual format should therefore be compact and should preferably coexist with the normal LeafGreen-PSX save rather than consuming excessive blocks.
+A standard PS1 memory card provides 128 KiB total storage arranged as 16 blocks of 8 KiB; block 0 contains card metadata/directory structures, leaving 15 data blocks for saves. Low-level transfers operate on 128-byte sectors. The eventual format should therefore be compact and should preferably coexist with the normal LeafGreen-PSX save rather than consuming excessive blocks.
 
 ## Architectural requirement now
 
