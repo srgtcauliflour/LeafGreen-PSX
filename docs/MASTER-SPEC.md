@@ -1,60 +1,28 @@
 # LeafGreen-PSX Master Specification
 
-## Mission
-Create a native original-PlayStation port/demake of Pokemon LeafGreen (USA) Rev 1. The shipped PS1 program must execute native MIPS code; embedding a GBA CPU/system emulator is not an acceptable implementation of the game runtime.
+## Product
+A native original-PlayStation port/demake runtime using Pokémon LeafGreen USA Rev 1 as the exact behavioural/data target. The shipped runtime executes MIPS PS1 code and uses PS1 GPU, SPU, controller, CD-ROM and memory-card services; it does not execute the game through an embedded GBA emulator.
 
-## Reference target
-- Game: Pokemon LeafGreen (USA)
-- Revision: 1 / v1.1
-- GBA game code: `BPGE`
-- ROM size: 16 MiB
-- SHA-1: `7862c67bdecbe21d1d69ce082ce34327e1c6ed5e`
-- Source-level behavioural reference: pret/pokefirered `leafgreen_rev1`
+## Compatibility target
+Supported development input initially: 16 MiB LeafGreen USA Rev 1, game code BPGE, revision 1, SHA-1 `7862c67bdecbe21d1d69ce082ce34327e1c6ed5e`. Other revisions are rejected until explicitly mapped/tested.
 
-The user's ROM remains local. ROM images and extracted copyrighted assets must never be committed.
+## Distribution boundary
+The repository contains original port/runtime code, tools, manifests/specifications and tests. It must not contain commercial ROMs, BIOS files or extracted proprietary game assets. Generated resources are local build products.
 
-## Platform target
-- Original PlayStation / PS one compatible hardware
-- PSn00bSDK toolchain
-- 320x240 baseline framebuffer target
-- Digital PS1 controller baseline; DualShock may be supported later
-- PS1 GPU rendering
-- SPU audio
-- Memory Card persistence
-- CD-ROM resource bundles
+## Architecture
+Game logic is portable. Hardware access is behind platform services. Host tooling verifies the ROM, extracts only locally required data, converts assets into PS1-friendly formats and produces deterministic metadata. CD resources are organized for context/area loading rather than cartridge-style arbitrary access.
 
-## Architectural rule
-Portable LeafGreen game code must not directly access PlayStation hardware. Hardware access is routed through `include/lg/platform.h` and platform-specific implementations.
+## M0 definition
+BIOS/boot -> title -> New Game -> Oak intro -> player setup -> bedroom -> downstairs -> Pallet Town -> movement/collision -> building transitions. See M0-PALLET-TOWN.md.
 
-## Network/link scope
-The original PlayStation has no standard built-in networking or GBA link interface. The following LeafGreen communication features are explicitly outside the compatibility target:
-- GBA link cable
-- Wireless Adapter
-- Union Room
-- trading
-- multiplayer/link battles
-- communication protocols and communication-error state machines
-- network/link-dependent Mystery Gift functionality
+## Rendering direction
+Correctness comes before enhancement. Indexed LeafGreen art maps naturally to PS1 indexed textures/CLUTs, but PS1 transparency semantics and VRAM placement are explicit. A later PS1 Enhanced milestone may expand presentation after compatibility is stable.
 
-The game must remain completable as a single-player title. Changes required to make trade evolutions or version-dependent Pokemon obtainable are deferred until the compatibility core is stable and will be documented as intentional PS1 adaptations.
+## Saving
+GBA flash saving is replaced by a transactional PS1 memory-card design with recoverability. Save identity and Pokémon serialization must be stable enough to support the later trading milestone.
 
-## Compatibility policy
-During initial porting, preserve LeafGreen Rev 1 behaviour wherever it does not depend on removed communications hardware. Do not mix optional gameplay enhancements into compatibility work.
+## Multiplayer/trading
+Do not emulate GBA link cable, Wireless Adapter, Union Room networking or network battles. Trading is redesigned as M10: asynchronous transactions using physical PS1 memory cards, with Slot 1/Slot 2 and carry-card workflows. The `LGTR` envelope reserves versioning, transaction IDs, state and integrity checks now without blocking the single-player port.
 
-## Resource strategy
-Do not mirror cartridge memory assumptions. Convert game resources into PS1-friendly area/system bundles loaded from CD-ROM into main RAM, VRAM and SPU RAM. Avoid excessive small synchronous CD reads.
-
-## M0: Pallet Town proof
-M0 is accepted when a native PS1 build can progress through:
-
-PS1 boot -> title -> New Game -> Oak introduction -> player setup -> bedroom -> downstairs -> Pallet Town -> player movement/collision -> basic building transitions.
-
-No ARM/GBA CPU emulation may be used to satisfy M0.
-
-## Engineering priorities
-1. Correctness and reproducibility.
-2. Real-hardware compatibility.
-3. Strict memory/resource budgeting.
-4. Behavioural comparison with LeafGreen Rev 1.
-5. Clear platform abstraction.
-6. Enhancements only after the compatibility baseline works.
+## Engineering quality
+Host-test portable logic, run strict warnings, validate exact target identity, document assumptions and measure on PS1 runtime/hardware at milestone gates. A stub does not satisfy a roadmap item whose acceptance criterion is visible/gameplay behaviour.
