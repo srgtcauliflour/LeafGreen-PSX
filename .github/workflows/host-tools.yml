@@ -20,3 +20,5 @@ jobs:
         run: python tools/assets/manifest.py tools/assets/leafgreen_rev1.example.json
       - name: Host overworld test
         run: cc -std=c11 -Wall -Wextra -Werror -Iinclude src/overworld/overworld.c tests/host/test_overworld.c -o /tmp/test_overworld && /tmp/test_overworld
+      - name: Host script VM test
+        run: cc -std=c11 -Wall -Wextra -Werror -Iinclude src/script/vm.c tests/host/test_script.c -o /tmp/test_script && /tmp/test_script
