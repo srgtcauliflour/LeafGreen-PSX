@@ -6,6 +6,7 @@
 
 static uint32_t s_frame_counter;
 static uint16_t s_previous_buttons;
+static char s_pad_buffer[2][34];
 
 static uint16_t translate_buttons(uint16_t pad) {
     uint16_t out = 0;
@@ -24,9 +25,17 @@ static uint16_t translate_buttons(uint16_t pad) {
 
 bool lg_platform_init(void) {
     ResetGraph(0);
-    InitPAD(NULL, 0, NULL, 0);
+
+    /* PSn00bSDK's low-level pad API requires persistent 34-byte receive
+       buffers for both controller ports. The BIOS pad driver writes into
+       these asynchronously after StartPAD(). */
+    EnterCriticalSection();
+    InitPAD(s_pad_buffer[0], sizeof(s_pad_buffer[0]),
+            s_pad_buffer[1], sizeof(s_pad_buffer[1]));
     StartPAD();
     ChangeClearPAD(0);
+    ExitCriticalSection();
+
     s_frame_counter = 0;
     s_previous_buttons = 0;
     return true;
