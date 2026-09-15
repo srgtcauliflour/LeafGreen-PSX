@@ -10,7 +10,7 @@ PS1 boot -> title -> New Game -> Oak intro -> player setup -> bedroom -> downsta
 - [x] LGPSX-004 — PS1 digital-controller translation layer.
 - [x] LGPSX-005 — Frame/VSync timing primitive.
 - [x] LGPSX-006 — Portable platform abstraction boundary.
-- [ ] LGPSX-007 — Verify local LeafGreen Rev 1 ROM in developer workflow.
+- [x] LGPSX-007 — Verify local LeafGreen Rev 1 ROM in developer workflow.
 - [ ] LGPSX-008 — Define asset manifest/extraction boundary.
 - [ ] LGPSX-009 — GBA palette/tile -> PS1 texture conversion prototype.
 - [ ] LGPSX-010 — LeafGreen text/font renderer.
