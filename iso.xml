@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<iso_project>
+  <track type="data">
+    <identifiers
+      system="PLAYSTATION"
+      application="LEAFGREEN-PSX"
+      volume="LEAFGREENPSX"
+      volume_set="LEAFGREENPSX"
+      publisher="HOMEBREW"
+    />
+    <directory_tree>
+      <file name="SYSTEM.CNF" type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
+      <file name="LEAFPSX.EXE" type="data" source="leafgreen_psx.exe" />
+    </directory_tree>
+  </track>
+</iso_project>
