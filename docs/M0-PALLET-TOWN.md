@@ -25,6 +25,10 @@ PS1 boot -> title -> New Game -> Oak intro -> player setup -> bedroom -> downsta
 - [ ] LGPSX-019 — Minimum event/script interpreter required for M0.
 - [ ] LGPSX-020 — Reach and walk around Pallet Town on the native PS1 runtime.
 
+## Deferred requirement — memory-card trading
+
+M0 is single-player, but its architecture must preserve the ability to add asynchronous Pokémon trading through physical PS1 memory cards later. Pokémon serialization, ownership/provenance, trade-evolution triggers, save transactions and memory-card I/O must remain separable. See `MEMORY-CARD-TRADING.md`.
+
 ## Checkpoint at LGPSX-020
 Record executable size, peak main RAM, VRAM allocation, frame time, CD read behaviour, and the proportion of upstream game code/data that is reused versus replaced.
 
