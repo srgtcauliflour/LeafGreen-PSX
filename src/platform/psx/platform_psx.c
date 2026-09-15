@@ -5,9 +5,36 @@
 #include <psxgpu.h>
 #include <psxpad.h>
 
+static DISPENV s_disp[2];
+static DRAWENV s_draw[2];
+static int s_buffer;
+
+static void init_video(void) {
+    SetDefDispEnv(&s_disp[0], 0, 0, 320, 240);
+    SetDefDrawEnv(&s_draw[0], 0, 240, 320, 240);
+    SetDefDispEnv(&s_disp[1], 0, 240, 320, 240);
+    SetDefDrawEnv(&s_draw[1], 0, 0, 320, 240);
+
+    setRGB0(&s_draw[0], 20, 28, 40);
+    setRGB0(&s_draw[1], 20, 28, 40);
+    s_draw[0].isbg = 1;
+    s_draw[1].isbg = 1;
+    s_draw[0].dtd = 1;
+    s_draw[1].dtd = 1;
+
+    PutDispEnv(&s_disp[0]);
+    PutDrawEnv(&s_draw[0]);
+    SetDispMask(1);
+
+    /* Temporary SDK font is only a bring-up HUD. LeafGreen's real generated
+       font renderer remains LGPSX-010 and must not depend on FntPrint(). */
+    FntLoad(960, 0);
+    FntOpen(16, 16, 288, 208, 0, 256);
+}
+
 static uint32_t s_frame_counter;
 static uint16_t s_previous_buttons;
-static char s_pad_buffer[2][34];
+static uint8_t s_pad_buffer[2][34];
 
 static uint16_t translate_buttons(uint16_t pad) {
     uint16_t out = 0;
@@ -35,6 +62,8 @@ bool lg_platform_init(void) {
     ChangeClearPAD(0);
     ExitCriticalSection();
 
+    init_video();
+    s_buffer = 0;
     s_frame_counter = 0;
     s_previous_buttons = 0;
     return true;
@@ -44,8 +73,13 @@ void lg_platform_begin_frame(void) {
 }
 
 void lg_platform_end_frame(void) {
+    DrawSync(0);
     VSync(0);
     ++s_frame_counter;
+    s_buffer ^= 1;
+    PutDispEnv(&s_disp[s_buffer]);
+    PutDrawEnv(&s_draw[s_buffer]);
+    SetDispMask(1);
 }
 
 void lg_platform_poll_input(LgInputState *state) {
@@ -64,4 +98,14 @@ void lg_platform_poll_input(LgInputState *state) {
 
 uint32_t lg_platform_frame_counter(void) {
     return s_frame_counter;
+}
+
+void lg_platform_draw_debug_hud(const LgInputState *input) {
+    FntPrint(-1, "LeafGreen-PSX native PS1 bring-up\n\n");
+    FntPrint(-1, "frame: %lu\n", (unsigned long)lg_platform_frame_counter());
+    FntPrint(-1, "held:     %04x\n", input->held);
+    FntPrint(-1, "pressed:  %04x\n", input->pressed);
+    FntPrint(-1, "released: %04x\n\n", input->released);
+    FntPrint(-1, "D-pad = movement\nX = A   O = B\nSTART/SELECT, L1/R1 mapped\n");
+    FntFlush(-1);
 }

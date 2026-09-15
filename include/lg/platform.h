@@ -28,5 +28,7 @@ void lg_platform_begin_frame(void);
 void lg_platform_end_frame(void);
 void lg_platform_poll_input(LgInputState *state);
 uint32_t lg_platform_frame_counter(void);
+/* Temporary SDK-font bring-up display; not the LeafGreen text renderer. */
+void lg_platform_draw_debug_hud(const LgInputState *input);
 
 #endif
