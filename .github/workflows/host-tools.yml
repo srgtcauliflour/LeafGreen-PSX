@@ -1,23 +1,20 @@
 name: Host tools
-
 on:
   push:
-    branches: [main]
   pull_request:
-
-permissions:
-  contents: read
-
 jobs:
-  romverify:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile Python tooling
-        run: python -m compileall -q tools
-      - name: Test ROM verifier
-        working-directory: tools/romverify
-        run: python -m unittest -v test_verify_leafgreen.py
+      - name: ROM verifier tests
+        run: python -m unittest discover -s tools/romverify -p 'test_*.py'
+      - name: Asset manifest tests
+        run: PYTHONPATH=tools/assets python -m unittest discover -s tools/assets -p 'test_*.py'
+      - name: Graphics converter tests
+        run: PYTHONPATH=tools/gfxconv python -m unittest discover -s tools/gfxconv -p 'test_*.py'
+      - name: Validate example manifest
+        run: python tools/assets/manifest.py tools/assets/leafgreen_rev1.example.json
