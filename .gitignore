@@ -1,0 +1,30 @@
+# Build output
+/build/
+/out/
+*.elf
+*.exe
+*.map
+*.bin
+*.cue
+*.iso
+
+# ROMs / cartridge dumps — never commit
+*.gba
+*.gb
+*.gbc
+*.nds
+*.sav
+*.srm
+
+# Locally extracted/generated copyrighted game assets
+/assets-generated/
+/generated/
+/extracted/
+/local-roms/
+
+# Tool/editor noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
