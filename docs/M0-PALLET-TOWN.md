@@ -11,8 +11,8 @@ PS1 boot -> title -> New Game -> Oak intro -> player setup -> bedroom -> downsta
 - [x] LGPSX-005 — Frame/VSync timing primitive.
 - [x] LGPSX-006 — Portable platform abstraction boundary.
 - [x] LGPSX-007 — Verify local LeafGreen Rev 1 ROM in developer workflow.
-- [ ] LGPSX-008 — Define asset manifest/extraction boundary.
-- [ ] LGPSX-009 — GBA palette/tile -> PS1 texture conversion prototype.
+- [x] LGPSX-008 — Define versioned asset manifest/extraction boundary.
+- [x] LGPSX-009 — GBA 4bpp palette/tile -> PS1 TIM conversion prototype.
 - [ ] LGPSX-010 — LeafGreen text/font renderer.
 - [ ] LGPSX-011 — Dialogue/window renderer.
 - [ ] LGPSX-012 — Overworld tile renderer.
@@ -24,10 +24,6 @@ PS1 boot -> title -> New Game -> Oak intro -> player setup -> bedroom -> downsta
 - [ ] LGPSX-018 — Map connections/warps.
 - [ ] LGPSX-019 — Minimum event/script interpreter required for M0.
 - [ ] LGPSX-020 — Reach and walk around Pallet Town on the native PS1 runtime.
-
-## Deferred requirement — memory-card trading
-
-M0 is single-player, but its architecture must preserve the ability to add asynchronous Pokémon trading through physical PS1 memory cards later. Pokémon serialization, ownership/provenance, trade-evolution triggers, save transactions and memory-card I/O must remain separable. See [MEMORY-CARD-TRADING.md](MEMORY-CARD-TRADING.md).
 
 ## Checkpoint at LGPSX-020
 Record executable size, peak main RAM, VRAM allocation, frame time, CD read behaviour, and the proportion of upstream game code/data that is reused versus replaced.
