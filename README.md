@@ -1,52 +1,37 @@
 # LeafGreen-PSX
 
-> Shhh…. It’s exactly what you think it is…
+> Shhh… it’s exactly what you think it is.
 
-LeafGreen-PSX is an experimental native PlayStation (PS1/PSX) port/demake of **Pokémon LeafGreen Version (USA) Rev 1**.
+**LeafGreen-PSX** is an experimental native PlayStation port/demake project targeting Pokémon LeafGreen (USA) Rev 1 as a behavioural/data reference. It is not a GBA emulator: the goal is to execute a PS1-native MIPS game runtime with PS1 GPU, SPU, controller, CD-ROM and memory-card backends.
 
-The project goal is to preserve LeafGreen's gameplay and data while replacing Game Boy Advance hardware dependencies with native PlayStation systems. It is **not** intended to ship as a GBA emulator wrapped in a PS1 executable.
+## Target ROM
 
-## Target
+Development tooling supports a user-supplied Pokémon LeafGreen USA Rev 1 ROM with SHA-1 `7862c67bdecbe21d1d69ce082ce34327e1c6ed5e`, game code `BPGE`, revision `1`, size 16 MiB. The ROM is never distributed by this repository.
 
-- Original PlayStation / PS one hardware
-- PSn00bSDK toolchain
-- Native MIPS R3000A executable
-- PS1 GPU rendering
-- PS1 controller input
-- PS1 SPU audio (later milestone)
-- PS1 Memory Card saves
-- CD-ROM resource bundles
-- 320×240 baseline presentation
+Verify locally:
 
-## Source ROM
+```sh
+python tools/romverify/verify_leafgreen.py /path/to/your/leafgreen.gba
+```
 
-Development targets a legally obtained LeafGreen USA Rev 1 ROM. The build tooling verifies the expected ROM before any local extraction step.
+## M0: Pallet Town
 
-Expected SHA-1:
+The first vertical slice is PS1 boot -> title -> New Game -> Oak intro -> player setup -> bedroom -> downstairs -> Pallet Town, with native movement, collision and building transitions. See `docs/M0-PALLET-TOWN.md`.
 
-`7862c67bdecbe21d1d69ce082ce34327e1c6ed5e`
+## Architecture
 
-**Do not commit ROM files or extracted proprietary assets to this repository.**
+Portable game logic must not directly access PlayStation hardware. Platform-specific video, input, timing, CD, audio and save functionality lives behind the PS1 platform layer. Host-side conversion/testing tools are used wherever possible before hardware integration.
 
-## M0 — Pallet Town
+Generated commercial game assets, ROMs and disc images are excluded from version control. See `docs/ASSET-PIPELINE.md`.
 
-The first major proof-of-concept milestone is:
+## Trading
 
-PS1 boot → LeafGreen title → New Game → Oak introduction → player setup → bedroom → Pallet Town → movement/collision → building transitions.
+GBA link cable, Wireless Adapter and network multiplayer are outside scope. Trading itself is a long-term goal: LeafGreen-PSX is designed to eventually support asynchronous Pokémon trades through physical PS1 memory cards. See `docs/MEMORY-CARD-TRADING.md`.
 
-The early foundation work (LGPSX-001–006) establishes the PS1 runtime, video, input, timing and platform boundary. ROM/resource integration begins at LGPSX-007.
+## Current status
 
-## Multiplayer / trading scope
+Foundation through LGPSX-009 is implemented on the M0 branch: PS1 project/platform skeleton, exact-ROM verification, versioned asset boundary and a deterministic GBA 4bpp/palette -> PS1 TIM prototype. Text rendering and overworld systems are now being built on top.
 
-GBA link-cable code, Wireless Adapter support, Union Room networking and link battles are not being ported. The PS1 has no equivalent built-in network/link environment that justifies carrying those GBA subsystems into the compatibility core.
+## Legal / project boundary
 
-**Trading is a long-term goal via PlayStation memory cards.** The intended future design is asynchronous physical-card trading: serialize a Pokémon/trade transaction to a PS1 memory card, transfer/insert the card, and complete the exchange without networking. The architecture will preserve the seams required for this feature while implementation remains deferred until the core single-player port is stable. See [the memory-card trading design](docs/MEMORY-CARD-TRADING.md).
-
-## References
-
-- `pret/pokefirered` — behavioural/source reference for FireRed/LeafGreen
-- `Lameguy64/PSn00bSDK` — open-source PlayStation development SDK
-
-## Legal / repository policy
-
-This repository must not distribute Nintendo/Game Freak ROM images or extracted copyrighted game assets. Tooling should operate locally on a user-supplied compatible ROM. LeafGreen-PSX is an unofficial fan engineering project and is not affiliated with Nintendo, Game Freak, Creatures Inc. or The Pokémon Company.
+This repository does not provide Pokémon LeafGreen, Nintendo/Game Freak assets, BIOS files or extracted proprietary resources. Users/developers must provide their own legally obtained inputs where required. LeafGreen-PSX is an independent fan/technical project and is not affiliated with or endorsed by Nintendo, Game Freak, Creatures or The Pokémon Company.
