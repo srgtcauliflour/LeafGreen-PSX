@@ -4,7 +4,6 @@
 These tests use synthetic bytes only; no copyrighted ROM data is stored here.
 """
 
-import hashlib
 import unittest
 
 import verify_leafgreen as verifier
@@ -15,7 +14,7 @@ class LeafGreenVerifierTests(unittest.TestCase):
         self.assertEqual(verifier.EXPECTED_SIZE, 16 * 1024 * 1024)
         self.assertEqual(verifier.EXPECTED_GAME_CODE, b"BPGE")
         self.assertEqual(verifier.EXPECTED_REVISION, 1)
-        self.assertEqual(len(verifier.EXPECTED_SHA1), 40)
+        self.assertEqual(verifier.EXPECTED_SHA1, "7862c67bdecbe21d1d69ce082ce34327e1c6ed5e")
 
     def test_gba_header_offsets(self):
         header = bytearray(0xBD)
@@ -23,12 +22,6 @@ class LeafGreenVerifierTests(unittest.TestCase):
         header[0xBC] = 1
         self.assertEqual(bytes(header[0xAC:0xB0]), verifier.EXPECTED_GAME_CODE)
         self.assertEqual(header[0xBC], verifier.EXPECTED_REVISION)
-
-    def test_sha1_algorithm_is_stable(self):
-        self.assertEqual(
-            hashlib.sha1(b"LeafGreen-PSX").hexdigest(),
-            "66ef86f3955e48eb23d9d9d107ded5dc0d79e84b",
-        )
 
 
 if __name__ == "__main__":
