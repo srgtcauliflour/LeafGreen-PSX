@@ -1,26 +1,22 @@
-# Porting Matrix
+# Porting matrix
 
-Each LeafGreen subsystem is classified as **PORT**, **REPLACE**, **REMOVE**, or **DEFER**.
-
-| Subsystem | Action | PS1 direction |
+| System | Decision | PS1 strategy |
 |---|---|---|
-| Pokemon/gameplay data | PORT | Preserve data/behaviour |
-| Core battle calculations | PORT | Portable C where practical |
-| Event/script logic | PORT | Preserve semantics |
-| Overworld/maps/collision | PORT | PS1 renderer + resource format |
-| Menus/text | PORT | PS1 GPU implementation |
-| GBA PPU/register access | REPLACE | PS1 GPU |
-| GBA keypad | REPLACE | PS1 controller |
-| GBA sound hardware | REPLACE | PS1 SPU |
-| Cartridge flash/SRAM | REPLACE | PS1 Memory Card |
-| ROM/cartridge resource access | REPLACE | CD-ROM bundles/cache |
-| GBA DMA/interrupt assumptions | REPLACE | PS1-safe scheduling/timing |
-| Link cable | REMOVE | Not supported |
-| Wireless Adapter | REMOVE | Not supported |
-| Union Room | REMOVE | Not supported |
-| Trading | REMOVE | Not supported |
-| Link battles | REMOVE | Not supported |
-| Link communication errors/protocols | REMOVE | Not supported |
-| Trade-evolution replacement rules | DEFER | Single-player adaptation after compatibility baseline |
-| Version-exclusive accessibility | DEFER | Optional single-player adaptation |
-| PS1 Enhanced visual mode | DEFER | After compatibility baseline |
+| core game state/progression | PORT | portable C/data model |
+| Pokémon/species/moves/items/trainers | PORT | generated local data + portable logic |
+| battle calculations | PORT | deterministic portable logic/tests |
+| maps/events/scripts | PORT/ADAPT | converted data + portable event services |
+| GBA PPU/background/sprite engine | REPLACE | PS1 GPU textured primitives/TIM/CLUT |
+| GBA DMA/register/interrupt assumptions | REPLACE | PS1 platform/timing services |
+| keypad | REPLACE | PS1 pad translation |
+| cartridge/flash save | REPLACE | PS1 memory-card transaction layer |
+| GBA audio/m4a hardware path | REPLACE | PS1 SPU-native pipeline |
+| ROM random-access assumptions | REPLACE | CD area bundles/resource manager |
+| link cable/Wireless Adapter | REMOVE | no PS1 network/link emulation |
+| Union Room/link battles | REMOVE | no network multiplayer |
+| trading | DEFER/REDESIGN | M10 physical memory-card LGTR transactions |
+| trade evolutions/version accessibility | DEFER | compatibility policy after core stability |
+| Mystery Gift requiring GBA comms | REMOVE/REDESIGN LATER | optional non-network replacement only if justified |
+| enhanced viewport/presentation | DEFER | M9 optional PS1 Enhanced mode |
+
+The exact LeafGreen Rev 1 target remains the behavioural reference. A subsystem is only considered ported when its relevant behaviour works on the native runtime; stubs do not count.
