@@ -1,5 +1,6 @@
 #include "lg/platform.h"
 
+#include <psxapi.h>
 #include <psxetc.h>
 #include <psxgpu.h>
 #include <psxpad.h>
@@ -26,9 +27,7 @@ static uint16_t translate_buttons(uint16_t pad) {
 bool lg_platform_init(void) {
     ResetGraph(0);
 
-    /* PSn00bSDK's low-level pad API requires persistent 34-byte receive
-       buffers for both controller ports. The BIOS pad driver writes into
-       these asynchronously after StartPAD(). */
+    /* BIOS pad polling writes a PADTYPE response into each persistent buffer. */
     EnterCriticalSection();
     InitPAD(s_pad_buffer[0], sizeof(s_pad_buffer[0]),
             s_pad_buffer[1], sizeof(s_pad_buffer[1]));
@@ -50,7 +49,13 @@ void lg_platform_end_frame(void) {
 }
 
 void lg_platform_poll_input(LgInputState *state) {
-    const uint16_t held = translate_buttons(PadRead(0));
+    const PADTYPE *pad = (const PADTYPE *)s_pad_buffer[0];
+    uint16_t held = 0;
+
+    if (pad->stat == 0 && pad->type != PAD_ID_NONE) {
+        held = translate_buttons(pad->btn);
+    }
+
     state->held = held;
     state->pressed = held & (uint16_t)~s_previous_buttons;
     state->released = s_previous_buttons & (uint16_t)~held;
