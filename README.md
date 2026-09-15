@@ -20,7 +20,7 @@ The project goal is to preserve LeafGreen's gameplay and data while replacing Ga
 
 ## Source ROM
 
-Development targets the user's legally obtained LeafGreen USA Rev 1 ROM. The build tooling verifies the expected ROM before any local extraction step.
+Development targets a legally obtained LeafGreen USA Rev 1 ROM. The build tooling verifies the expected ROM before any local extraction step.
 
 Expected SHA-1:
 
