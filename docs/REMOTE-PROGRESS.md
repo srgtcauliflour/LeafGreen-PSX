@@ -9,8 +9,9 @@
 - platform-neutral overworld movement/collision scaffold for later M0 tasks
 - logical resource/area-bundle index boundary for CD-oriented loading
 - bounded yielding script VM scaffold for LGPSX-019
-- PS1 memory budget and testing strategy
-- formal M0-M10 roadmap and porting matrix
+- versioned logical save envelope separated from memory-card transport
+- PS1 memory budget, acceptance gate and testing strategy
+- formal M0-M10 roadmap, decisions and porting workflow
 - future memory-card LGTR envelope, CRC validation and host test
 - agent guardrails and local/remote handoff documentation
 
