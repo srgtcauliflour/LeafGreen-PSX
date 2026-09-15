@@ -40,7 +40,7 @@ The early foundation work (LGPSX-001–006) establishes the PS1 runtime, video, 
 
 GBA link-cable code, Wireless Adapter support, Union Room networking and link battles are not being ported. The PS1 has no equivalent built-in network/link environment that justifies carrying those GBA subsystems into the compatibility core.
 
-**Trading is a long-term goal via PlayStation memory cards.** The intended future design is asynchronous physical-card trading: serialize a Pokémon/trade transaction to a PS1 memory card, transfer/insert the card, and complete the exchange without networking. The architecture will preserve the seams required for this feature while implementation remains deferred until the core single-player port is stable. See `docs/MEMORY-CARD-TRADING.md`.
+**Trading is a long-term goal via PlayStation memory cards.** The intended future design is asynchronous physical-card trading: serialize a Pokémon/trade transaction to a PS1 memory card, transfer/insert the card, and complete the exchange without networking. The architecture will preserve the seams required for this feature while implementation remains deferred until the core single-player port is stable. See [the memory-card trading design](docs/MEMORY-CARD-TRADING.md).
 
 ## References
 
