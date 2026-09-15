@@ -13,10 +13,9 @@ target_include_directories(leafgreen_psx PRIVATE include)
 target_compile_features(leafgreen_psx PRIVATE c_std_11)
 target_compile_options(leafgreen_psx PRIVATE -Wall -Wextra)
 
-# PSn00bSDK provides these helpers when configured with its toolchain.
-if(COMMAND psn00bsdk_target_incbin)
-    psn00bsdk_target_incbin(leafgreen_psx PRIVATE assets_placeholder generated/placeholder.bin)
-endif()
+# PSn00bSDK supplies these helpers when its toolchain is active.
+# Keep generated proprietary assets out of the executable until the local
+# extraction pipeline has produced them; M0 host logic can compile without them.
 if(COMMAND psn00bsdk_add_executable)
     psn00bsdk_add_executable(leafgreen_psx GPREL)
 endif()
