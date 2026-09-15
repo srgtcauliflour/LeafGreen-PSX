@@ -12,7 +12,7 @@ jobs:
           python-version: '3.12'
       - name: ROM verifier tests
         run: python -m unittest discover -s tools/romverify -p 'test_*.py'
-      - name: Asset manifest tests
+      - name: Asset tool tests
         run: PYTHONPATH=tools/assets python -m unittest discover -s tools/assets -p 'test_*.py'
       - name: Graphics converter tests
         run: PYTHONPATH=tools/gfxconv python -m unittest discover -s tools/gfxconv -p 'test_*.py'
