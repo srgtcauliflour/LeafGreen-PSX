@@ -6,6 +6,7 @@ add_executable(leafgreen_psx
     src/platform/psx/platform_psx.c
     src/game/text.c
     src/game/trade_record.c
+    src/game/resource.c
     src/overworld/overworld.c
     src/script/vm.c
 )
