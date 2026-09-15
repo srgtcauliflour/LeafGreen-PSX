@@ -13,3 +13,9 @@ Validate boot, GPU/CLUT upload, controller, timing, CD reads, SPU and memory car
 
 ## M0 golden path
 Boot -> title -> New Game -> Oak intro -> player setup -> bedroom -> downstairs -> Pallet Town -> movement/collision -> building transitions. Every regression release should preserve this path once achieved.
+
+## Automated emulator smoke run
+
+See `PS1-RUNTIME-VALIDATION.md` and `tools/runtime/check_ps1.py` for the pinned
+headless PCSX-ReARMed HLE run, frame captures and controller checks. This is
+separate from asset-free host CI and uses locally generated font assets.

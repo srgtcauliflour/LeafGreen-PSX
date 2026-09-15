@@ -63,7 +63,7 @@ The ASCII helper supports letters, digits, spaces, newlines and `!?.-` only.
 
 Host tests cover packing, quadrants, space transparency, rejection of the wrong
 ROM, proportional placement, newlines, truncation, unsupported controls, sink
-capacity and coordinate overflow. A host-rendered preview was inspected and
-both font-enabled and asset-free PS1 builds were checked. Neither is evidence
-of emulator/hardware rendering. LGPSX-010 remains open until the native demo is
-booted and its glyphs, transparency, CLUT placement and frame stability observed.
+capacity and coordinate overflow. Both build modes compile. The native demo
+has now run for 300 frames under PCSX-ReARMed HLE with readable glyphs and
+correct observed transparency; see PS1-RUNTIME-VALIDATION.md. Retail BIOS and
+hardware remain unverified. LGPSX-010 remains open for complete text behaviour.
