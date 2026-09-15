@@ -4,6 +4,14 @@
 
 **LeafGreen-PSX** is an experimental native PlayStation port/demake project targeting Pokémon LeafGreen (USA) Rev 1 as a behavioural/data reference. It is not a GBA emulator: the goal is to execute a PS1-native MIPS game runtime with PS1 GPU, SPU, controller, CD-ROM and memory-card backends.
 
+## AI agents and contributors
+
+**AI coding agents must start with `AGENTS.md`.** It is the canonical onboarding and contribution contract and tells an unfamiliar agent what to read, which architectural rules are non-negotiable, how to choose the next task, how to test work, and how to leave a durable handoff.
+
+Human contributors should also read `CONTRIBUTING.md` and `AGENTS.md` before making substantial changes.
+
+The intended zero-chat-history workflow is: clone the repository -> read `AGENTS.md` -> read its required project documents -> inspect the current roadmap/handoff -> select the earliest unblocked task -> implement/test/document it -> submit a focused PR.
+
 ## Target ROM
 
 Development tooling supports a user-supplied Pokémon LeafGreen USA Rev 1 ROM with SHA-1 `7862c67bdecbe21d1d69ce082ce34327e1c6ed5e`, game code `BPGE`, revision `1`, size 16 MiB. The ROM is never distributed by this repository.
