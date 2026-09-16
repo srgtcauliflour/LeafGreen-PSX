@@ -48,8 +48,22 @@ reports termination, missing terminator, unsupported control, invalid input or
 sink exhaustion. It supports ordinary glyphs, `FE` newline and `FF` end. Codes
 `F7` through `FD` stop processing: placeholders, scrolling, pauses and formatting
 need explicit game-service handling before they can be supported. Lines advance
-16 pixels for this demo; there is no wrapping, scrolling or typewriter effect.
+16 pixels for this demo; there is no typewriter effect.
 The ASCII helper supports letters, digits, spaces, newlines and `!?.-` only.
+
+`LGDialogueState`/`LGWindowState` (see below) add an optional bounded
+`wrap_width`: character wrapping only (it breaks before whichever glyph would
+exceed the bound, not at word boundaries), and it never breaks the first
+glyph on a line even if that glyph alone exceeds the bound. `lg_text_layout`
+itself is unchanged and still lays out one unbounded line per `FE`.
+
+`LGWindowState` also takes an optional `max_lines`: once a glyph would start
+one line beyond that bound, it is withheld and `lg_window_step` reports
+`LG_WINDOW_AWAIT_SCROLL` until the caller signals an advance, at which point
+the box resets to its first line (`y` back to the box's starting `y`) and
+continues from the withheld glyph. This gates the LeafGreen-style
+scroll-a-full-box-then-continue behaviour behind an explicit per-frame
+signal, the same way `LG_WINDOW_AWAIT_ADVANCE` gates a control byte.
 
 ## PS1 backend and limits
 
@@ -63,7 +77,7 @@ The ASCII helper supports letters, digits, spaces, newlines and `!?.-` only.
 
 Host tests cover packing, quadrants, space transparency, rejection of the wrong
 ROM, proportional placement, newlines, truncation, unsupported controls, sink
-capacity and coordinate overflow. A host-rendered preview was inspected and
-both font-enabled and asset-free PS1 builds were checked. Neither is evidence
-of emulator/hardware rendering. LGPSX-010 remains open until the native demo is
-booted and its glyphs, transparency, CLUT placement and frame stability observed.
+capacity and coordinate overflow. Both build modes compile. The native demo
+has now run for 300 frames under PCSX-ReARMed HLE with readable glyphs and
+correct observed transparency; see PS1-RUNTIME-VALIDATION.md. Retail BIOS and
+hardware remain unverified. LGPSX-010 remains open for complete text behaviour.
