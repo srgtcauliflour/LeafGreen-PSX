@@ -48,7 +48,7 @@ reports termination, missing terminator, unsupported control, invalid input or
 sink exhaustion. It supports ordinary glyphs, `FE` newline and `FF` end. Codes
 `F7` through `FD` stop processing: placeholders, scrolling, pauses and formatting
 need explicit game-service handling before they can be supported. Lines advance
-16 pixels for this demo; there is no scrolling or typewriter effect.
+16 pixels for this demo; there is no typewriter effect.
 The ASCII helper supports letters, digits, spaces, newlines and `!?.-` only.
 
 `LGDialogueState`/`LGWindowState` (see below) add an optional bounded
@@ -56,6 +56,14 @@ The ASCII helper supports letters, digits, spaces, newlines and `!?.-` only.
 exceed the bound, not at word boundaries), and it never breaks the first
 glyph on a line even if that glyph alone exceeds the bound. `lg_text_layout`
 itself is unchanged and still lays out one unbounded line per `FE`.
+
+`LGWindowState` also takes an optional `max_lines`: once a glyph would start
+one line beyond that bound, it is withheld and `lg_window_step` reports
+`LG_WINDOW_AWAIT_SCROLL` until the caller signals an advance, at which point
+the box resets to its first line (`y` back to the box's starting `y`) and
+continues from the withheld glyph. This gates the LeafGreen-style
+scroll-a-full-box-then-continue behaviour behind an explicit per-frame
+signal, the same way `LG_WINDOW_AWAIT_ADVANCE` gates a control byte.
 
 ## PS1 backend and limits
 

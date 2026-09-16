@@ -96,6 +96,13 @@ never breaks the first glyph on a line even if that glyph alone exceeds
 the bound, and it is character wrapping only, not word wrapping — no
 lookahead groups glyphs into words yet. See TEXT-RENDERER.md.
 
+`LGWindowState` also gained `max_lines` (0 disables it): once a glyph would
+start one line beyond that bound, it is withheld and `lg_window_step`
+reports `LG_WINDOW_AWAIT_SCROLL` until the caller signals an advance, then
+the box resets to its first line and continues, mirroring the same gating
+pattern already used for control bytes. This is the LeafGreen-style
+fill-a-box-then-scroll behaviour, gated the same way as `LG_WINDOW_AWAIT_ADVANCE`.
+
 This portable half of LGPSX-011 is now in place. What remains, and needs a
 session with the PSn00bSDK toolchain and a PS1 emulator/hardware (neither
 is available in this sandbox), is the actual PS1 window renderer: a
