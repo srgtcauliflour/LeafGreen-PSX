@@ -1,7 +1,7 @@
 # Work handoff
 
 ## Current milestone
-M0 — Pallet Town. Continue from `build/m0-validation`, based on the still-open
+M0 — Pallet Town. Continue from `feat/m0-text`, based on the still-open
 foundation PR #1 (`bootstrap/m0-foundation`); `main` is not yet the foundation.
 
 ## Verified in Work on 2026-09-15
@@ -38,13 +38,30 @@ boot, visible debug HUD, stable frame count and controller held/pressed/released
 transitions. Neither emulator nor hardware runtime has been validated here.
 No LGPSX-010+ acceptance item is newly complete.
 
-## Next asset work
+## Font progress (2026-09-15)
 
-The user's exact ROM is available and verified. The example extraction manifest
-still contains placeholder offsets: do not use it as a real asset map. Obtain
-exact Rev 1 reference metadata and map the font/atlas for LGPSX-010, then verify
-conversion and PS1 VRAM/CLUT rendering. The current executable is the diagnostic
-screen only; it does not implement LeafGreen gameplay.
+Normal Latin font bytes and widths were fully matched against the verified ROM.
+`tools/font/extract_font.py` now extracts a checked 256-glyph atlas locally;
+`src/game/text.c` provides bounded proportional layout and a diagnostic ASCII
+adapter. An optional PS1 textured-quad demo is available. See TEXT-RENDERER.md.
+
+```sh
+python tools/font/extract_font.py /path/to/leafgreen.gba
+cmake --preset default -DLGPSX_FONT_DEMO=ON
+cmake --build build
+```
+
+15 Python tests and six C test programs pass. Font-enabled and asset-free PS1
+builds compile/link and generate BIN/CUE. Host font preview inspected; native
+rendering remains unverified. No emulator binary is installed in this workspace;
+PCSX-Redux's GitHub latest-release endpoint returned 404 and its official Linux
+download page requires additional setup. No retail BIOS has been supplied.
+
+Next: boot the font-enabled CUE, check the five diagnostic lines below the HUD,
+controller input and timing; fix any GPU/runtime issues before claiming LGPSX-010.
+Then add explicit dialogue control-code handling and window rendering (LGPSX-011).
+The example general extraction manifest still has placeholder offsets; only
+the dedicated font descriptor is verified. No map data is mapped yet.
 
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
