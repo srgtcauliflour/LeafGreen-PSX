@@ -26,19 +26,22 @@ def main():
          'tools/assets/leafgreen_rev1.example.json'], env=env)
     compiler = shlex.split(os.environ.get('CC', 'cc'))
     flags = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-Iinclude']
-    modules = {'text': 'src/game/text.c',
-               'overworld': 'src/overworld/overworld.c',
-               'script': 'src/script/vm.c',
-               'trade_record': 'src/game/trade_record.c',
-               'save': 'src/game/save.c',
-               'resource': 'src/game/resource.c'}
+    modules = {'text': ['src/game/text.c'],
+               'dialogue': ['src/game/dialogue.c'],
+               'window': ['src/game/window.c', 'src/game/dialogue.c'],
+               'overworld': ['src/overworld/overworld.c'],
+               'script': ['src/script/vm.c'],
+               'trade_record': ['src/game/trade_record.c'],
+               'save': ['src/game/save.c'],
+               'resource': ['src/game/resource.c']}
+    all_sources = sorted({source for sources in modules.values() for source in sources})
     with tempfile.TemporaryDirectory(prefix='lgpsx-host-') as temp:
-        for name, source in modules.items():
+        for name, sources in modules.items():
             binary = Path(temp) / ('test_' + name + '.exe')
-            run(compiler + flags + [source, 'tests/host/test_' + name + '.c',
+            run(compiler + flags + [*sources, 'tests/host/test_' + name + '.c',
                                     '-o', str(binary)])
             run([str(binary)])
-        for source in ['src/main.c', *modules.values()]:
+        for source in ['src/main.c', *all_sources]:
             run(compiler + flags + ['-c', source, '-o',
                                     str(Path(temp) / (Path(source).stem + '.o'))])
     print('PASS: all host checks (PS1 backend/runtime not validated).')

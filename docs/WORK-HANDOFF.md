@@ -64,5 +64,53 @@ still unverified. LGPSX-010 remains open for full text behaviour.
 The example general extraction manifest still has placeholder offsets; only
 the dedicated font descriptor is verified. No map data is mapped yet.
 
+## Dialogue state machine (2026-09-16)
+
+`include/lg/dialogue.h` and `src/game/dialogue.c` add a resumable,
+host-tested portable layer on top of the existing glyph layout: it lays out
+ordinary glyphs and `FE` newlines exactly like `lg_text_layout`, but pauses
+at any `F7`-`FD` control byte and reports `LG_DIALOGUE_WAIT` instead of
+rejecting the string. A caller (eventually the script VM/window renderer)
+resolves the control (wait for button, scroll, ...) and calls
+`lg_dialogue_resume()` to skip that single byte and continue. Multi-byte
+control operands are not yet handled: no verified ROM evidence establishes
+their length or exact meaning, so only single-byte control bytes are
+supported for now. This is scaffolding for LGPSX-011, not a finished
+dialogue/window renderer; PS1 window rendering using the tested font
+backend is still pending, and no PS1/emulator runtime evidence has been
+collected for this module yet.
+
+## Window advance-gating (2026-09-16)
+
+`include/lg/window.h` / `src/game/window.c` add `LGWindowState`, a thin
+layer over `LGDialogueState` that gates each control-byte pause behind an
+explicit per-frame `advance_pressed` signal (e.g. a confirmed button
+press), so a caller can poll it once per frame, show a waiting-for-input
+indicator while `LG_WINDOW_AWAIT_ADVANCE` holds, and only resume layout
+once the player has acknowledged it. Host-tested; no drawing of any kind.
+
+`LGDialogueState`/`LGWindowState` also gained an optional `wrap_width`
+parameter (0 disables it): character wrapping that breaks a line before
+whichever glyph would exceed the bound, measured from the starting x. It
+never breaks the first glyph on a line even if that glyph alone exceeds
+the bound, and it is character wrapping only, not word wrapping — no
+lookahead groups glyphs into words yet. See TEXT-RENDERER.md.
+
+`LGWindowState` also gained `max_lines` (0 disables it): once a glyph would
+start one line beyond that bound, it is withheld and `lg_window_step`
+reports `LG_WINDOW_AWAIT_SCROLL` until the caller signals an advance, then
+the box resets to its first line and continues, mirroring the same gating
+pattern already used for control bytes. This is the LeafGreen-style
+fill-a-box-then-scroll behaviour, gated the same way as `LG_WINDOW_AWAIT_ADVANCE`.
+
+This portable half of LGPSX-011 is now in place. What remains, and needs a
+session with the PSn00bSDK toolchain and a PS1 emulator/hardware (neither
+is available in this sandbox), is the actual PS1 window renderer: a
+background/border box plus the already-validated font backend driven by
+`LGWindowState`, then an emulator run recording it, the same two-step
+pattern used for the font demo (compiled first in PR #3, validated in
+PR #4). Do not mark LGPSX-011 complete until that PS1-side rendering
+exists and has runtime evidence.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
