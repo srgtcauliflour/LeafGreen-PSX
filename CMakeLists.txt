@@ -6,6 +6,7 @@ set(LGPSX_SOURCES
     src/platform/psx/platform_psx.c
     src/platform/psx/text_psx.c
     src/game/text.c
+    src/game/dialogue.c
     src/game/trade_record.c
     src/game/save.c
     src/game/resource.c

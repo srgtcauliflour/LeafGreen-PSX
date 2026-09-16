@@ -64,5 +64,21 @@ still unverified. LGPSX-010 remains open for full text behaviour.
 The example general extraction manifest still has placeholder offsets; only
 the dedicated font descriptor is verified. No map data is mapped yet.
 
+## Dialogue state machine (2026-09-16)
+
+`include/lg/dialogue.h` and `src/game/dialogue.c` add a resumable,
+host-tested portable layer on top of the existing glyph layout: it lays out
+ordinary glyphs and `FE` newlines exactly like `lg_text_layout`, but pauses
+at any `F7`-`FD` control byte and reports `LG_DIALOGUE_WAIT` instead of
+rejecting the string. A caller (eventually the script VM/window renderer)
+resolves the control (wait for button, scroll, ...) and calls
+`lg_dialogue_resume()` to skip that single byte and continue. Multi-byte
+control operands are not yet handled: no verified ROM evidence establishes
+their length or exact meaning, so only single-byte control bytes are
+supported for now. This is scaffolding for LGPSX-011, not a finished
+dialogue/window renderer; PS1 window rendering using the tested font
+backend is still pending, and no PS1/emulator runtime evidence has been
+collected for this module yet.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

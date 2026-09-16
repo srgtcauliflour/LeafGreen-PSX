@@ -27,6 +27,7 @@ def main():
     compiler = shlex.split(os.environ.get('CC', 'cc'))
     flags = ['-std=c11', '-Wall', '-Wextra', '-Werror', '-Iinclude']
     modules = {'text': 'src/game/text.c',
+               'dialogue': 'src/game/dialogue.c',
                'overworld': 'src/overworld/overworld.c',
                'script': 'src/script/vm.c',
                'trade_record': 'src/game/trade_record.c',
