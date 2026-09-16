@@ -12,10 +12,11 @@ static LGWindowStatus map_status(LGDialogueStatus status) {
 }
 
 void lg_window_init(LGWindowState *w, const uint8_t *text, size_t size,
-                     const uint8_t widths[256], int x, int y,
+                     const uint8_t widths[256], int x, int y, int wrap_width,
                      LGGlyphSink sink, void *sink_context) {
     if (!w) return;
-    lg_dialogue_init(&w->dialogue, text, size, widths, x, y, sink, sink_context);
+    lg_dialogue_init(&w->dialogue, text, size, widths, x, y, wrap_width,
+                      sink, sink_context);
 }
 
 LGWindowStatus lg_window_step(LGWindowState *w, bool advance_pressed) {

@@ -22,7 +22,7 @@ int main(void) {
 
     /* "Hi" (0xbb,0xbc) then a wait control (0xf9), then "!" (0xab), then end. */
     const uint8_t text[] = {0xbb, 0xbc, 0xf9, 0xab, 0xff};
-    lg_dialogue_init(&d, text, sizeof text, widths, 10, 20, capture, &seen);
+    lg_dialogue_init(&d, text, sizeof text, widths, 10, 20, 0, capture, &seen);
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_WAIT);
     assert(d.control == 0xf9);
     assert(seen.count == 2 && seen.x[0] == 10 && seen.x[1] == 16);
@@ -36,20 +36,20 @@ int main(void) {
     /* Newline resets x and advances y, independent of control handling. */
     seen.count = 0;
     const uint8_t multiline[] = {0xbb, 0xfe, 0xbc, 0xff};
-    lg_dialogue_init(&d, multiline, sizeof multiline, widths, 5, 0, capture, &seen);
+    lg_dialogue_init(&d, multiline, sizeof multiline, widths, 5, 0, 0, capture, &seen);
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_DONE);
     assert(seen.count == 2 && seen.x[1] == 5 && seen.y[1] == 16);
 
     /* Missing terminator truncates without erroring. */
     const uint8_t truncated[] = {0xbb};
-    lg_dialogue_init(&d, truncated, sizeof truncated, widths, 0, 0, capture, &seen);
+    lg_dialogue_init(&d, truncated, sizeof truncated, widths, 0, 0, 0, capture, &seen);
     seen.count = 0;
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_TRUNCATED);
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_TRUNCATED);
 
     /* A full sink can be retried once the caller has drained it. */
     const uint8_t two[] = {0xbb, 0xbc, 0xff};
-    lg_dialogue_init(&d, two, sizeof two, widths, 0, 0, capture, &seen);
+    lg_dialogue_init(&d, two, sizeof two, widths, 0, 0, 0, capture, &seen);
     seen.count = 8;
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_FULL);
     seen.count = 0;
@@ -58,15 +58,33 @@ int main(void) {
 
     /* Overflowing width/position is an error, matching lg_text_layout. */
     widths[0xbb] = 17;
-    lg_dialogue_init(&d, two, sizeof two, widths, 0, 0, capture, &seen);
+    lg_dialogue_init(&d, two, sizeof two, widths, 0, 0, 0, capture, &seen);
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_ERROR);
     widths[0xbb] = 6;
     const uint8_t nl[] = {0xfe};
-    lg_dialogue_init(&d, nl, sizeof nl, widths, 0, INT_MAX, capture, &seen);
+    lg_dialogue_init(&d, nl, sizeof nl, widths, 0, INT_MAX, 0, capture, &seen);
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_ERROR);
 
+    /* wrap_width breaks a line before the glyph that would exceed it,
+       measured from the starting x; it never breaks the first glyph on a
+       line even if that glyph alone exceeds the bound. */
+    seen.count = 0;
+    const uint8_t abc[] = {0xbb, 0xbc, 0xbd, 0xff}; /* A, B, C */
+    lg_dialogue_init(&d, abc, sizeof abc, widths, 0, 0, 12, capture, &seen);
+    assert(lg_dialogue_step(&d) == LG_DIALOGUE_DONE);
+    assert(seen.count == 3);
+    assert(seen.x[0] == 0 && seen.y[0] == 0);
+    assert(seen.x[1] == 6 && seen.y[1] == 0);
+    assert(seen.x[2] == 0 && seen.y[2] == 16);
+    seen.count = 0;
+    widths[0xbb] = 16;
+    lg_dialogue_init(&d, abc, sizeof abc, widths, 0, 0, 12, capture, &seen);
+    assert(lg_dialogue_step(&d) == LG_DIALOGUE_DONE);
+    assert(seen.x[0] == 0 && seen.y[0] == 0);
+    widths[0xbb] = 6;
+
     /* Missing arguments are rejected up front. */
-    lg_dialogue_init(&d, 0, 0, widths, 0, 0, capture, &seen);
+    lg_dialogue_init(&d, 0, 0, widths, 0, 0, 0, capture, &seen);
     assert(d.status == LG_DIALOGUE_ERROR);
     assert(lg_dialogue_step(&d) == LG_DIALOGUE_ERROR);
     assert(lg_dialogue_step(0) == LG_DIALOGUE_ERROR);

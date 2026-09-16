@@ -15,8 +15,10 @@ typedef struct {
     LGDialogueState dialogue;
 } LGWindowState;
 
+/* wrap_width has the same character-wrapping meaning as in LGDialogueState;
+   pass 0 to disable. */
 void lg_window_init(LGWindowState *w, const uint8_t *text, size_t size,
-                     const uint8_t widths[256], int x, int y,
+                     const uint8_t widths[256], int x, int y, int wrap_width,
                      LGGlyphSink sink, void *sink_context);
 /* Advances layout by one call. When a control byte is hit, reports
    LG_WINDOW_AWAIT_ADVANCE on every call until advance_pressed is true, at

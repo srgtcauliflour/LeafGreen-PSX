@@ -2,7 +2,7 @@
 #include <limits.h>
 
 void lg_dialogue_init(LGDialogueState *d, const uint8_t *text, size_t size,
-                       const uint8_t widths[256], int x, int y,
+                       const uint8_t widths[256], int x, int y, int wrap_width,
                        LGGlyphSink sink, void *sink_context) {
     if (!d) return;
     d->text = text;
@@ -12,6 +12,7 @@ void lg_dialogue_init(LGDialogueState *d, const uint8_t *text, size_t size,
     d->x = x;
     d->y = y;
     d->start_x = x;
+    d->wrap_width = wrap_width > 0 ? wrap_width : 0;
     d->sink = sink;
     d->sink_context = sink_context;
     d->control = 0;
@@ -49,6 +50,15 @@ LGDialogueStatus lg_dialogue_step(LGDialogueState *d) {
         if (width == 0 || width > 16 || d->x > INT_MAX - width) {
             d->status = LG_DIALOGUE_ERROR;
             return d->status;
+        }
+        if (d->wrap_width > 0 && d->x > d->start_x &&
+            d->x - d->start_x + width > d->wrap_width) {
+            if (d->y > INT_MAX - 16) {
+                d->status = LG_DIALOGUE_ERROR;
+                return d->status;
+            }
+            d->y += 16;
+            d->x = d->start_x;
         }
         if (!d->sink(d->sink_context, glyph, d->x, d->y, width)) {
             d->status = LG_DIALOGUE_FULL;

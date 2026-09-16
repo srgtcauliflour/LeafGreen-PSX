@@ -48,8 +48,14 @@ reports termination, missing terminator, unsupported control, invalid input or
 sink exhaustion. It supports ordinary glyphs, `FE` newline and `FF` end. Codes
 `F7` through `FD` stop processing: placeholders, scrolling, pauses and formatting
 need explicit game-service handling before they can be supported. Lines advance
-16 pixels for this demo; there is no wrapping, scrolling or typewriter effect.
+16 pixels for this demo; there is no scrolling or typewriter effect.
 The ASCII helper supports letters, digits, spaces, newlines and `!?.-` only.
+
+`LGDialogueState`/`LGWindowState` (see below) add an optional bounded
+`wrap_width`: character wrapping only (it breaks before whichever glyph would
+exceed the bound, not at word boundaries), and it never breaks the first
+glyph on a line even if that glyph alone exceeds the bound. `lg_text_layout`
+itself is unchanged and still lays out one unbounded line per `FE`.
 
 ## PS1 backend and limits
 

@@ -89,6 +89,13 @@ press), so a caller can poll it once per frame, show a waiting-for-input
 indicator while `LG_WINDOW_AWAIT_ADVANCE` holds, and only resume layout
 once the player has acknowledged it. Host-tested; no drawing of any kind.
 
+`LGDialogueState`/`LGWindowState` also gained an optional `wrap_width`
+parameter (0 disables it): character wrapping that breaks a line before
+whichever glyph would exceed the bound, measured from the starting x. It
+never breaks the first glyph on a line even if that glyph alone exceeds
+the bound, and it is character wrapping only, not word wrapping — no
+lookahead groups glyphs into words yet. See TEXT-RENDERER.md.
+
 This portable half of LGPSX-011 is now in place. What remains, and needs a
 session with the PSn00bSDK toolchain and a PS1 emulator/hardware (neither
 is available in this sandbox), is the actual PS1 window renderer: a
