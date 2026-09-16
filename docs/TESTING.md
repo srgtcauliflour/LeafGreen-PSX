@@ -1,6 +1,8 @@
 # Testing strategy
 
 ## Host tests
+
+Run `python tools/check_host.py` (also used by CI).
 Pure conversion and game logic should compile/run without PS1 hardware. Current CI covers ROM-verifier metadata, asset manifests, GBA colour/tile primitives, TIM generation, grid movement/collision, script-VM bounds/yielding and LGTR record integrity.
 
 ## Reference tests

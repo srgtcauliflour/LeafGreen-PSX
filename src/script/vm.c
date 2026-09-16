@@ -9,7 +9,7 @@ LGScriptStatus lg_script_step(LGScriptVM *v){
  switch(op){
  case OP_END:v->status=LG_SCRIPT_DONE;break;
  case OP_WAIT:v->status=LG_SCRIPT_WAITING;break;
- case OP_SET:case OP_ADD:{if(v->pc+2>=v->size){v->status=LG_SCRIPT_ERROR;break;}uint8_t i=v->code[v->pc++];uint16_t x=v->code[v->pc++]|(v->code[v->pc++]<<8);if(i>=32){v->status=LG_SCRIPT_ERROR;break;}if(op==OP_SET)v->vars[i]=x;else v->vars[i]+=x;break;}
+ case OP_SET:case OP_ADD:{if(v->size-v->pc<3){v->status=LG_SCRIPT_ERROR;break;}uint8_t i=v->code[v->pc++];uint16_t x=v->code[v->pc];x|=(uint16_t)((uint16_t)v->code[v->pc+1]<<8);v->pc+=2;if(i>=32){v->status=LG_SCRIPT_ERROR;break;}if(op==OP_SET)v->vars[i]=x;else v->vars[i]+=x;break;}
  default:v->status=LG_SCRIPT_ERROR;break;
  }return v->status;
 }
