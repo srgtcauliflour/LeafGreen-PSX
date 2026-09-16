@@ -80,5 +80,23 @@ dialogue/window renderer; PS1 window rendering using the tested font
 backend is still pending, and no PS1/emulator runtime evidence has been
 collected for this module yet.
 
+## Window advance-gating (2026-09-16)
+
+`include/lg/window.h` / `src/game/window.c` add `LGWindowState`, a thin
+layer over `LGDialogueState` that gates each control-byte pause behind an
+explicit per-frame `advance_pressed` signal (e.g. a confirmed button
+press), so a caller can poll it once per frame, show a waiting-for-input
+indicator while `LG_WINDOW_AWAIT_ADVANCE` holds, and only resume layout
+once the player has acknowledged it. Host-tested; no drawing of any kind.
+
+This portable half of LGPSX-011 is now in place. What remains, and needs a
+session with the PSn00bSDK toolchain and a PS1 emulator/hardware (neither
+is available in this sandbox), is the actual PS1 window renderer: a
+background/border box plus the already-validated font backend driven by
+`LGWindowState`, then an emulator run recording it, the same two-step
+pattern used for the font demo (compiled first in PR #3, validated in
+PR #4). Do not mark LGPSX-011 complete until that PS1-side rendering
+exists and has runtime evidence.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

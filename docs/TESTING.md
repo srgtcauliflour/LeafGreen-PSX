@@ -3,7 +3,7 @@
 ## Host tests
 
 Run `python tools/check_host.py` (also used by CI).
-Pure conversion and game logic should compile/run without PS1 hardware. Current CI covers ROM-verifier metadata, asset manifests, GBA colour/tile primitives, TIM generation, grid movement/collision, script-VM bounds/yielding, the resumable dialogue state machine's control-byte pausing and LGTR record integrity.
+Pure conversion and game logic should compile/run without PS1 hardware. Current CI covers ROM-verifier metadata, asset manifests, GBA colour/tile primitives, TIM generation, grid movement/collision, script-VM bounds/yielding, the resumable dialogue state machine's control-byte pausing, its window advance-gating layer, and LGTR record integrity.
 
 ## Reference tests
 Where behaviour depends on LeafGreen, create deterministic fixtures/observations from the user's exact Rev 1 local reference without committing proprietary bulk data. Prefer numeric/state assertions over screenshots or copied asset blobs.
