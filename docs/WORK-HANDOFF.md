@@ -112,5 +112,16 @@ pattern used for the font demo (compiled first in PR #3, validated in
 PR #4). Do not mark LGPSX-011 complete until that PS1-side rendering
 exists and has runtime evidence.
 
+## Script VM text callback (2026-09-17)
+
+`LGScriptVM` (LGPSX-019 scaffold) gained `OP_TEXT` plus
+`lg_script_set_text_fn()`: it calls a registered portable callback with a
+1-byte text id and blocks (`LG_SCRIPT_BLOCKED`) until the caller resolves
+it with `lg_script_unblock()`, rather than auto-resuming like the existing
+one-frame `OP_WAIT`. This is the callback/blocking machinery a real event
+system needs to drive `LGWindowState`-based dialogue from a script, not a
+mapping of real LeafGreen bytecode (`text_id` is our own indirection). See
+SCRIPT-VM.md.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
