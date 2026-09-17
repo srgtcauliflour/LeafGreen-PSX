@@ -18,11 +18,20 @@ typedef bool (*LGScriptTextFn)(void *context, uint8_t text_id);
    the same way OP_TEXT does: the caller calls lg_script_unblock() once the
    movement (e.g. a multi-frame slide into the next tile) has finished. */
 typedef bool (*LGScriptMoveFn)(void *context, int8_t dx, int8_t dy);
+/* Called for OP_WARP with the raw 1-byte operand as a portable warp id (see
+   lg_map_warp_at() in overworld.h -- LGWarp.id, not a LeafGreen warp
+   index). Returns false to reject an id the game service can't resolve.
+   On true, blocks like OP_TEXT/OP_MOVE: a warp can mean an async CD
+   resource swap for the destination map/area bundle, so the caller calls
+   lg_script_unblock() once that has actually finished. */
+typedef bool (*LGScriptWarpFn)(void *context, uint8_t warp_id);
 typedef struct {
     const uint8_t *code; size_t size, pc; uint16_t vars[32];
+    uint8_t flags[32]; /* 256 single-bit flags; flags[id/8] bit (id%8) */
     LGScriptStatus status;
     LGScriptTextFn text_fn; void *text_context;
     LGScriptMoveFn move_fn; void *move_context;
+    LGScriptWarpFn warp_fn; void *warp_context;
 } LGScriptVM;
 void lg_script_init(LGScriptVM *vm,const uint8_t *code,size_t size);
 /* Registers the text/dialogue service callback; pass fn=0 to leave OP_TEXT
@@ -33,6 +42,9 @@ void lg_script_set_text_fn(LGScriptVM *vm, LGScriptTextFn fn, void *context);
 /* Registers the movement service callback; pass fn=0 to leave OP_MOVE
    unsupported, for the same reason as the text callback above. */
 void lg_script_set_move_fn(LGScriptVM *vm, LGScriptMoveFn fn, void *context);
+/* Registers the warp service callback; pass fn=0 to leave OP_WARP
+   unsupported, for the same reason as the text callback above. */
+void lg_script_set_warp_fn(LGScriptVM *vm, LGScriptWarpFn fn, void *context);
 LGScriptStatus lg_script_step(LGScriptVM *vm);
 /* Resolves a pending LG_SCRIPT_BLOCKED wait (e.g. the dialogue/window the
    last OP_TEXT opened has finished). No-op unless the VM is blocked. */

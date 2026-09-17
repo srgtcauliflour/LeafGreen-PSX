@@ -11,6 +11,7 @@ set(LGPSX_SOURCES
     src/game/trade_record.c
     src/game/save.c
     src/game/resource.c
+    src/game/service.c
     src/overworld/overworld.c
     src/script/vm.c
 )

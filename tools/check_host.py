@@ -31,6 +31,7 @@ def main():
                'window': ['src/game/window.c', 'src/game/dialogue.c'],
                'overworld': ['src/overworld/overworld.c'],
                'script': ['src/script/vm.c'],
+               'service': ['src/game/service.c', 'src/script/vm.c', 'src/overworld/overworld.c'],
                'trade_record': ['src/game/trade_record.c'],
                'save': ['src/game/save.c'],
                'resource': ['src/game/resource.c']}

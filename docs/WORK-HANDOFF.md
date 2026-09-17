@@ -125,12 +125,30 @@ SCRIPT-VM.md.
 
 `LGScriptVM` also gained `OP_MOVE`/`lg_script_set_move_fn()`: same
 blocking pattern as `OP_TEXT`, but for a single grid step, validated
-against the same dx/dy shape `lg_player_step()` accepts. Neither of these
-opcodes is wired to the real overworld/window modules yet -- that
-integration (a game loop registering callbacks that actually call
-`lg_player_step()`/`LGWindowState`) is still open, and still needs real
-M0 map/script data and PS1 runtime evidence before any of LGPSX-012
-through LGPSX-019 can be marked complete.
+against the same dx/dy shape `lg_player_step()` accepts.
+
+## Script VM warp/flags and overworld wiring (2026-09-17)
+
+`LGScriptVM` gained `OP_WARP`/`lg_script_set_warp_fn()` (same blocking
+pattern, resolved against a warp id table) and 256 pure-VM-state flags via
+`OP_FLAG_SET`/`OP_JUMP_IF_FLAG` (no callback needed -- see SCRIPT-VM.md).
+
+More importantly, `OP_MOVE`/`OP_TEXT`/`OP_WARP` are now actually wired to
+the real overworld model: `include/lg/service.h` + `src/game/service.c`
+add `LGGameService`, bound onto a VM with `lg_game_service_bind()`. It
+resolves `OP_MOVE` through `lg_map_can_enter()`/`lg_player_step()` and
+`OP_WARP` against a caller-supplied `LGWarp` table synchronously (both
+unblock immediately -- no multi-frame slide or async CD warp exists yet),
+while `OP_TEXT` only records the requested id for the caller's own
+`LGWindowState`/font backend to resolve. `tests/host/test_service.c` runs
+a real script (move, request text, request warp) end to end against a
+live `LGMap`/`LGPlayer`, including rejection of a blocked move and an
+unknown warp id.
+
+This closes the callback/VM-state side of LGPSX-019's scaffolding, but it
+is still scaffolding: no real M0 script bytecode, converted map data, font
+widths, or PS1 runtime evidence exist behind any of it yet, so LGPSX-012
+through LGPSX-019 remain open until those do.
 
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
