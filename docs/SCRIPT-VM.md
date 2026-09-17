@@ -22,3 +22,15 @@ The `text_id` byte is our own scaffolding, not a LeafGreen text/dialogue
 index: no ROM evidence maps real script bytecode ids to real dialogue text
 yet. This establishes the blocking/callback machinery a real opcode set
 will need for text, movement, warps and similar multi-frame game services.
+
+## Movement service callback (`OP_MOVE`)
+
+`lg_script_set_move_fn(vm, fn, context)` registers `LGScriptMoveFn`
+(`bool fn(void *context, int8_t dx, int8_t dy)`). `OP_MOVE` reads two
+signed 1-byte operands and validates the same step shape
+`lg_player_step()` accepts (each of dx/dy in `{-1,0,1}`, never both
+nonzero) before calling it -- an invalid shape, a missing callback, or a
+rejecting callback are all script errors. An accepting callback blocks the
+VM exactly like `OP_TEXT` does, since a real move is a multi-frame slide
+into the next tile, not a one-step VM action; the caller calls
+`lg_script_unblock()` once that finishes.
