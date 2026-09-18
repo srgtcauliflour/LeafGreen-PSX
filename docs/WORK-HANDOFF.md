@@ -381,5 +381,24 @@ bag model directly (claiming slots, topping up, clearing on removal,
 overflow, invalid args); `tests/host/test_service.c` covers the
 `OP_ITEM`-through-`LGGameService` wiring and its error paths.
 
+## Save payload gains inventory (2026-09-18)
+
+`LGSaveGamePayload` (`lg/save_game.h`) previously only covered player
+position/facing and script flags; the doc comment already promised it
+would grow as more M0 state got ported. It now embeds a fixed
+`LG_SAVE_INVENTORY_SLOTS` (20, our own placeholder, not a verified
+LeafGreen bag size) array of `LGInventorySlot`, bumping `LG_SAVE_VERSION`
+from 1 to 2.
+
+`lg_save_game_capture`/`lg_save_game_apply` both gained an `LGInventory *`
+parameter and now copy its slots to/from the payload alongside
+player/flags. Both stay "never partial": a NULL inventory, a NULL
+`inventory->slots`, or an `inventory->slot_count` that doesn't exactly
+equal `LG_SAVE_INVENTORY_SLOTS` makes the whole call a no-op, same as any
+other invalid argument here -- a save can only round-trip an inventory
+shaped exactly like its own schema. `tests/host/test_save_game.c` covers
+the inventory round-trip and the mismatched-slot-count no-op case
+alongside the existing player/flags/corruption coverage.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

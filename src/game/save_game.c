@@ -38,19 +38,23 @@ int lg_save_game_read(const uint8_t *data, size_t size,
 }
 
 void lg_save_game_capture(const LGPlayer *player, const LGScriptVM *vm,
-                           LGSaveGamePayload *out) {
-    if (!player || !vm || !out) return;
+                           const LGInventory *inventory, LGSaveGamePayload *out) {
+    if (!player || !vm || !inventory || !inventory->slots || !out) return;
+    if (inventory->slot_count != LG_SAVE_INVENTORY_SLOTS) return;
     out->player_x = player->x;
     out->player_y = player->y;
     out->player_facing = player->facing;
     memcpy(out->flags, vm->flags, sizeof out->flags);
+    memcpy(out->inventory, inventory->slots, sizeof out->inventory);
 }
 
 void lg_save_game_apply(const LGSaveGamePayload *payload, LGPlayer *player,
-                         LGScriptVM *vm) {
-    if (!payload || !player || !vm) return;
+                         LGScriptVM *vm, LGInventory *inventory) {
+    if (!payload || !player || !vm || !inventory || !inventory->slots) return;
+    if (inventory->slot_count != LG_SAVE_INVENTORY_SLOTS) return;
     player->x = payload->player_x;
     player->y = payload->player_y;
     player->facing = payload->player_facing;
     memcpy(vm->flags, payload->flags, sizeof vm->flags);
+    memcpy(inventory->slots, payload->inventory, sizeof payload->inventory);
 }
