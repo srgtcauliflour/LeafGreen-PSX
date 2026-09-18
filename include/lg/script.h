@@ -25,6 +25,18 @@ typedef bool (*LGScriptMoveFn)(void *context, int8_t dx, int8_t dy);
    resource swap for the destination map/area bundle, so the caller calls
    lg_script_unblock() once that has actually finished. */
 typedef bool (*LGScriptWarpFn)(void *context, uint8_t warp_id);
+/* Called for OP_ITEM with a portable item id and a 16-bit quantity (add
+   count, not a running total). Returns false to reject an id the game
+   service doesn't recognise or a quantity it can't apply (e.g. bag full),
+   which the VM treats as a script error. On true, blocks like
+   OP_TEXT/OP_MOVE/OP_WARP: even though an inventory mutation itself is
+   instant, a real caller very likely follows it with its own "got an
+   item!" message/animation, so the caller decides when that's done and
+   calls lg_script_unblock(). This has no game-service wiring yet (no
+   inventory model exists in this codebase): it establishes the VM-side
+   scaffolding SCRIPT-VM.md called for, matching OP_TEXT/OP_MOVE/OP_WARP's
+   own history of VM opcode first, LGGameService wiring later. */
+typedef bool (*LGScriptItemFn)(void *context, uint8_t item_id, uint16_t quantity);
 typedef struct {
     const uint8_t *code; size_t size, pc; uint16_t vars[32];
     uint8_t flags[32]; /* 256 single-bit flags; flags[id/8] bit (id%8) */
@@ -32,6 +44,7 @@ typedef struct {
     LGScriptTextFn text_fn; void *text_context;
     LGScriptMoveFn move_fn; void *move_context;
     LGScriptWarpFn warp_fn; void *warp_context;
+    LGScriptItemFn item_fn; void *item_context;
 } LGScriptVM;
 void lg_script_init(LGScriptVM *vm,const uint8_t *code,size_t size);
 /* Registers the text/dialogue service callback; pass fn=0 to leave OP_TEXT
@@ -45,6 +58,9 @@ void lg_script_set_move_fn(LGScriptVM *vm, LGScriptMoveFn fn, void *context);
 /* Registers the warp service callback; pass fn=0 to leave OP_WARP
    unsupported, for the same reason as the text callback above. */
 void lg_script_set_warp_fn(LGScriptVM *vm, LGScriptWarpFn fn, void *context);
+/* Registers the item service callback; pass fn=0 to leave OP_ITEM
+   unsupported, for the same reason as the text callback above. */
+void lg_script_set_item_fn(LGScriptVM *vm, LGScriptItemFn fn, void *context);
 LGScriptStatus lg_script_step(LGScriptVM *vm);
 /* Resolves a pending LG_SCRIPT_BLOCKED wait (e.g. the dialogue/window the
    last OP_TEXT opened has finished). No-op unless the VM is blocked. */

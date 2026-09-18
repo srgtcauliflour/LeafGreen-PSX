@@ -26,6 +26,15 @@ static bool warp_service(void *context, uint8_t id) {
     return s->accept;
 }
 
+typedef struct { uint8_t last_id; uint16_t last_qty; unsigned calls; bool accept; } ItemService;
+static bool item_service(void *context, uint8_t id, uint16_t qty) {
+    ItemService *s = context;
+    s->last_id = id;
+    s->last_qty = qty;
+    ++s->calls;
+    return s->accept;
+}
+
 int main(void) {
     const uint8_t code[] = {1,2,5,0,2,2,3,0,3,0};
     const uint8_t wide[] = {1,31,0x34,0x12,2,31,0xff,0xff,0};
@@ -123,6 +132,29 @@ int main(void) {
     const uint8_t truncated_warp[] = {6};
     lg_script_init(&v, truncated_warp, sizeof truncated_warp);
     lg_script_set_warp_fn(&v, warp_service, &wsvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+
+    /* OP_ITEM blocks the same way as OP_TEXT/OP_MOVE/OP_WARP, passing
+       through a 16-bit little-endian quantity. */
+    const uint8_t item[] = {9,4,0x34,0x12,0}; /* item 4, qty 0x1234 */
+    ItemService isvc = {0, 0, 0, true};
+    lg_script_init(&v, item, sizeof item);
+    lg_script_set_item_fn(&v, item_service, &isvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED);
+    assert(isvc.last_id == 4 && isvc.last_qty == 0x1234 && isvc.calls == 1);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED); /* no-op while blocked */
+    assert(isvc.calls == 1);
+    lg_script_unblock(&v);
+    assert(lg_script_step(&v) == LG_SCRIPT_DONE);
+    isvc.accept = false;
+    lg_script_init(&v, item, sizeof item);
+    lg_script_set_item_fn(&v, item_service, &isvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    lg_script_init(&v, item, sizeof item);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR); /* no item_fn registered */
+    const uint8_t truncated_item[] = {9,4,0};
+    lg_script_init(&v, truncated_item, sizeof truncated_item);
+    lg_script_set_item_fn(&v, item_service, &isvc);
     assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
 
     /* OP_FLAG_SET sets/clears a bit; OP_JUMP_IF_FLAG jumps only when the

@@ -45,6 +45,21 @@ absent from the service's warp table) is a script error. An accepting
 callback blocks the VM the same way, since a warp can mean an async CD
 resource swap for the destination map/area bundle, not a same-step action.
 
+## Item service callback (`OP_ITEM`)
+
+`lg_script_set_item_fn(vm, fn, context)` registers `LGScriptItemFn`
+(`bool fn(void *context, uint8_t item_id, uint16_t quantity)`). `OP_ITEM`
+reads a 1-byte item id and a 16-bit little-endian quantity (an add count,
+not a running total) and calls it; a missing or rejecting callback (an
+id/quantity the service can't apply, e.g. bag full) is a script error. An
+accepting callback blocks the VM the same way as the others: the
+inventory mutation itself is instant, but a real caller very likely
+follows it with its own "got an item!" message/animation, so the caller
+decides when that's done. Unlike `OP_TEXT`/`OP_MOVE`/`OP_WARP`, this has
+no `LGGameService` wiring yet -- there is no inventory model anywhere in
+this codebase. This establishes the VM-side scaffolding the way those
+three did before their own service wiring arrived in later PRs.
+
 ## Flags (`OP_FLAG_SET`, `OP_JUMP_IF_FLAG`)
 
 `LGScriptVM` carries 256 single-bit flags (`flags[32]`), separate from the
