@@ -6,8 +6,9 @@ static LGWindowStatus map_status(const LGWindowState *w, LGDialogueStatus status
         case LG_DIALOGUE_WAIT:      return LG_WINDOW_AWAIT_ADVANCE;
         case LG_DIALOGUE_DONE:      return LG_WINDOW_DONE;
         case LG_DIALOGUE_TRUNCATED: return LG_WINDOW_TRUNCATED;
-        case LG_DIALOGUE_FULL:      return w->awaiting_scroll ? LG_WINDOW_AWAIT_SCROLL
-                                                                : LG_WINDOW_FULL;
+        case LG_DIALOGUE_FULL:      if (w->awaiting_scroll) return LG_WINDOW_AWAIT_SCROLL;
+                                     if (w->paused_for_reveal) return LG_WINDOW_RUNNING;
+                                     return LG_WINDOW_FULL;
         default:                    return LG_WINDOW_ERROR;
     }
 }
@@ -23,18 +24,27 @@ static bool window_sink(void *context, uint8_t glyph, int x, int y, uint8_t widt
         w->have_last_y = true;
         ++w->lines_seen;
     }
+    if (w->reveal_per_step > 0 && w->revealed_this_call >= w->reveal_per_step) {
+        w->paused_for_reveal = true;
+        return false;
+    }
+    ++w->revealed_this_call;
     return w->sink(w->sink_context, glyph, x, y, width);
 }
 
 void lg_window_init(LGWindowState *w, const uint8_t *text, size_t size,
                      const uint8_t widths[256], int x, int y, int wrap_width,
-                     int max_lines, LGGlyphSink sink, void *sink_context) {
+                     int max_lines, int reveal_per_step,
+                     LGGlyphSink sink, void *sink_context) {
     if (!w) return;
     w->start_y = y;
     w->max_lines = max_lines > 0 ? max_lines : 0;
     w->lines_seen = 0;
     w->have_last_y = false;
     w->awaiting_scroll = false;
+    w->reveal_per_step = reveal_per_step > 0 ? reveal_per_step : 0;
+    w->revealed_this_call = 0;
+    w->paused_for_reveal = false;
     w->sink = sink;
     w->sink_context = sink_context;
     lg_dialogue_init(&w->dialogue, text, size, widths, x, y, wrap_width,
@@ -44,6 +54,8 @@ void lg_window_init(LGWindowState *w, const uint8_t *text, size_t size,
 
 LGWindowStatus lg_window_step(LGWindowState *w, bool advance_pressed) {
     if (!w) return LG_WINDOW_ERROR;
+    w->revealed_this_call = 0;
+    w->paused_for_reveal = false;
     if (w->awaiting_scroll) {
         if (!advance_pressed) return LG_WINDOW_AWAIT_SCROLL;
         w->dialogue.y = w->start_y;

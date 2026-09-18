@@ -48,7 +48,8 @@ reports termination, missing terminator, unsupported control, invalid input or
 sink exhaustion. It supports ordinary glyphs, `FE` newline and `FF` end. Codes
 `F7` through `FD` stop processing: placeholders, scrolling, pauses and formatting
 need explicit game-service handling before they can be supported. Lines advance
-16 pixels for this demo; there is no typewriter effect.
+16 pixels for this demo. There is no typewriter effect at this layer, but see
+`LGWindowState`'s `reveal_per_step` below.
 The ASCII helper supports letters, digits, spaces, newlines and `!?.-` only.
 
 `LGDialogueState`/`LGWindowState` (see below) add an optional bounded
@@ -64,6 +65,16 @@ the box resets to its first line (`y` back to the box's starting `y`) and
 continues from the withheld glyph. This gates the LeafGreen-style
 scroll-a-full-box-then-continue behaviour behind an explicit per-frame
 signal, the same way `LG_WINDOW_AWAIT_ADVANCE` gates a control byte.
+
+`LGWindowState` also takes an optional `reveal_per_step`: a typewriter
+effect that paces drawing to that many glyphs per `lg_window_step()` call
+(one real frame, in `LGGameLoop`'s use of it). Unlike
+`AWAIT_ADVANCE`/`AWAIT_SCROLL`, pausing for this needs no caller
+acknowledgement -- it reports plain `LG_WINDOW_RUNNING` and simply
+continues from the glyph it paused at on the next call. The actual reveal
+speed (frames per glyph, or glyphs per frame) is entirely the caller's to
+choose by how it drives `lg_window_step()`; nothing here claims a
+LeafGreen-verified typing speed.
 
 ## PS1 backend and limits
 

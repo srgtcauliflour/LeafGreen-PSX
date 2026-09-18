@@ -51,7 +51,7 @@ int main(void) {
     memset(widths, 6, sizeof widths);
     Seen seen = {0};
     LGGameLoop loop;
-    lg_game_loop_init(&loop, &vm, &svc, widths, capture, &seen, lookup_text, 0, 10, 20, 0, 0);
+    lg_game_loop_init(&loop, &vm, &svc, widths, capture, &seen, lookup_text, 0, 10, 20, 0, 0, 0);
 
     LGObjectEvent events[] = {{1, 1, 5}};
     LGOverworldRunner runner;
@@ -93,7 +93,7 @@ int main(void) {
     LGScriptVM vm2;
     lg_game_service_init(&svc2, &player2, &map, 0, 0);
     LGGameLoop loop2;
-    lg_game_loop_init(&loop2, &vm2, &svc2, widths, capture, &seen, lookup_text, 0, 10, 20, 0, 0);
+    lg_game_loop_init(&loop2, &vm2, &svc2, widths, capture, &seen, lookup_text, 0, 10, 20, 0, 0, 0);
     LGObjectEvent events2[] = {{1, 1, 9}}; /* script_id 9 isn't in lookup_script */
     LGOverworldRunner runner2;
     lg_overworld_runner_init(&runner2, &player2, &svc2, &vm2, &loop2, events2, 1, lookup_script, 0);
@@ -125,7 +125,7 @@ int main(void) {
     lg_game_service_set_map_table(&svc4, map_table, 1);
 
     LGGameLoop loop4;
-    lg_game_loop_init(&loop4, &vm4, &svc4, widths, capture, &seen, lookup_text, 0, 10, 20, 0, 0);
+    lg_game_loop_init(&loop4, &vm4, &svc4, widths, capture, &seen, lookup_text, 0, 10, 20, 0, 0, 0);
     LGObjectEvent warp_map_events[] = {{1, 1, 5}}; /* the NPC that triggers the warp */
     LGOverworldRunner runner4;
     lg_overworld_runner_init(&runner4, &player4, &svc4, &vm4, &loop4, warp_map_events, 1,

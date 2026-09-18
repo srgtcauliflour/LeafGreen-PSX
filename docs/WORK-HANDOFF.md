@@ -345,5 +345,21 @@ ROM/hardware-verified LeafGreen movement timing behind it yet.
 `tests/host/test_overworld.c` covers set-on-move, unset-when-blocked,
 counting down, and never underflowing past 0.
 
+## Window typewriter reveal pacing (2026-09-18)
+
+`LGWindowState` gained `reveal_per_step` (window.h/c): text in a box
+previously appeared all at once in a single `lg_window_step()` call,
+which no RPG actually does. A positive value paces drawing to that many
+glyphs per call; unlike `AWAIT_ADVANCE`/`AWAIT_SCROLL`, pausing for it
+needs no caller acknowledgement -- it reports plain `LG_WINDOW_RUNNING`
+and resumes from the paused glyph on the next call. The actual speed
+(frames per glyph) is entirely up to how often/how the caller invokes
+`lg_window_step()`; no LeafGreen-verified typing speed is claimed.
+`LGGameLoop` gained a matching `text_reveal_per_step` forwarded to every
+window it opens for a script's `OP_TEXT` (0 keeps the prior instant
+behavior). `tests/host/test_window.c` covers a multi-call reveal
+sequence, including the last glyph and the terminator landing in the
+same call once nothing is left to pause on.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
