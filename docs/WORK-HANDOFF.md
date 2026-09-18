@@ -476,5 +476,20 @@ about a ledge, same as it already couldn't about elevation.
 `tests/host/test_overworld.c` covers the jump, wrong-direction entry,
 and a blocked landing cell.
 
+## Running (2026-09-18)
+
+`lg_overworld_input_step()`'s doc comment flagged "no running/biking" as
+a gap. Added `lg_player_run_step()` (overworld.h/c): identical rules to
+`lg_player_step()`, but a successful step sets `LGPlayer.moving` to a
+new `LG_PLAYER_RUN_SLIDE_FRAMES` (half of `LG_PLAYER_SLIDE_FRAMES`)
+instead, purely a faster presentation hint -- both functions now share
+one internal `player_step_at_speed()` helper so the collision/elevation/
+ledge logic isn't duplicated. `lg_overworld_input_step()` calls the run
+variant while `LG_BUTTON_B` is held. There is still no biking, and no
+ROM-verified running speed backs the new constant.
+`tests/host/test_overworld.c` covers `lg_player_run_step()` directly
+(including a running ledge jump); `tests/host/test_input_control.c`
+covers the held-B path through `lg_overworld_input_step()`.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

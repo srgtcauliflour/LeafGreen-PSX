@@ -9,6 +9,7 @@ bool lg_overworld_input_step(LGPlayer *player, const LGMap *map,
     else if (input->pressed & LG_BUTTON_LEFT) dx = -1;
     else if (input->pressed & LG_BUTTON_RIGHT) dx = 1;
     else return false;
-    lg_player_step(player, map, dx, dy);
+    if (input->held & LG_BUTTON_B) lg_player_run_step(player, map, dx, dy);
+    else lg_player_step(player, map, dx, dy);
     return true;
 }

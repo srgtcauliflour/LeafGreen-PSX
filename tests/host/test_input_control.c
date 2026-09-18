@@ -36,6 +36,14 @@ int main(void) {
     assert(lg_overworld_input_step(&player, &map, &input));
     assert(player.x == 1 && player.y == 1 && player.facing == 1);
 
+    /* Holding B (Running Shoes) uses the faster lg_player_run_step()
+       presentation hint for the same grid step. Player is at (1,1). */
+    input.held = LG_BUTTON_B;
+    input.pressed = LG_BUTTON_DOWN;
+    assert(lg_overworld_input_step(&player, &map, &input));
+    assert(player.x == 1 && player.y == 2);
+    assert(player.moving == LG_PLAYER_RUN_SLIDE_FRAMES);
+
     /* NULL arguments are rejected. */
     assert(!lg_overworld_input_step(0, &map, &input));
     assert(!lg_overworld_input_step(&player, 0, &input));

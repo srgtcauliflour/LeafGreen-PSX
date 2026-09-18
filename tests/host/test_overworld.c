@@ -97,5 +97,19 @@ int main(void){
  assert(lg_map_can_enter_from(&lm,0,0,1,0)==1); /* rightward: matches ledge */
  assert(lg_map_can_enter_from(&lm,2,0,1,0)==0); /* leftward: wrong direction */
 
+ /* lg_player_run_step(): same collision/elevation/ledge rules as
+    lg_player_step(), but a faster LGPlayer.moving presentation hint. */
+ LGMapCell rc[9]={0}; rc[5].collision=1; LGMap rm={3,3,rc};
+ LGPlayer rp={1,1,0,0};
+ lg_player_run_step(&rp,&rm,1,0); assert(rp.x==1&&rp.y==1&&rp.moving==0); /* blocked */
+ lg_player_run_step(&rp,&rm,0,1); assert(rp.x==1&&rp.y==2);
+ assert(rp.moving==LG_PLAYER_RUN_SLIDE_FRAMES);
+ assert(LG_PLAYER_RUN_SLIDE_FRAMES < LG_PLAYER_SLIDE_FRAMES);
+ /* A running ledge jump still doubles the (faster) duration. */
+ LGPlayer rp2={0,0,0,0};
+ lg_player_run_step(&rp2,&lm,1,0);
+ assert(rp2.x==2 && rp2.y==0);
+ assert(rp2.moving==(uint8_t)(LG_PLAYER_RUN_SLIDE_FRAMES*2));
+
  return 0;
 }

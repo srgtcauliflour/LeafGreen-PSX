@@ -18,7 +18,7 @@ int lg_map_can_enter_from(const LGMap *m,int from_x,int from_y,int to_x,int to_y
  if(from_elev==0||to_elev==0) return 1;
  return from_elev==to_elev;
 }
-void lg_player_step(LGPlayer *p,const LGMap *m,int dx,int dy){
+static void player_step_at_speed(LGPlayer *p,const LGMap *m,int dx,int dy,uint8_t slide_frames){
  if(!p||!m) return;
  if(dx>1||dx<-1||dy>1||dy<-1||(dx&&dy)) return;
  if(dx>0)p->facing=1; else if(dx<0)p->facing=3; else if(dy>0)p->facing=2; else if(dy<0)p->facing=0;
@@ -28,10 +28,16 @@ void lg_player_step(LGPlayer *p,const LGMap *m,int dx,int dy){
  if(ledge){
   int lx=nx+dx, ly=ny+dy;
   if(!lg_map_can_enter(m,lx,ly)) return;
-  p->x=(int16_t)lx;p->y=(int16_t)ly;p->moving=(uint8_t)(LG_PLAYER_SLIDE_FRAMES*2);
+  p->x=(int16_t)lx;p->y=(int16_t)ly;p->moving=(uint8_t)(slide_frames*2);
   return;
  }
- p->x=(int16_t)nx;p->y=(int16_t)ny;p->moving=LG_PLAYER_SLIDE_FRAMES;
+ p->x=(int16_t)nx;p->y=(int16_t)ny;p->moving=slide_frames;
+}
+void lg_player_step(LGPlayer *p,const LGMap *m,int dx,int dy){
+ player_step_at_speed(p,m,dx,dy,LG_PLAYER_SLIDE_FRAMES);
+}
+void lg_player_run_step(LGPlayer *p,const LGMap *m,int dx,int dy){
+ player_step_at_speed(p,m,dx,dy,LG_PLAYER_RUN_SLIDE_FRAMES);
 }
 void lg_player_animate_tick(LGPlayer *p){
  if(p&&p->moving) p->moving--;
