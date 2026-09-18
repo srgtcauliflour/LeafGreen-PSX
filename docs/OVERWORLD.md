@@ -46,6 +46,28 @@ indirection into a caller's own script table (the same idea as
 `LGScriptTextFn`'s `text_id`), not a LeafGreen object-event id -- no ROM
 evidence maps real NPC/event ids yet.
 
+## Ledges (`LGMapCell.ledge`)
+
+`LGMapCell` gained a `ledge` field: 0 means not a ledge, otherwise it
+encodes the one direction (`facing + 1`, the same facing values
+`LGPlayer.facing`/`lg_player_step()` use) a player can jump it in --
+LeafGreen's classic one-way ledges. `lg_map_can_enter_from()` now
+refuses entering a ledge cell from any direction but its required one
+(elevation is not considered for a ledge cell at all, since jumping down
+one is itself an elevation change); `lg_player_step()` uses the same
+check, and on a step that matches a ledge's direction, jumps straight
+over the ledge cell onto the cell beyond it in the same direction
+(skipping the ledge tile itself as a landing spot), provided that
+landing cell passes a plain `lg_map_can_enter()` -- otherwise the whole
+step is blocked rather than landing partway. A ledge jump sets
+`LGPlayer.moving` to twice `LG_PLAYER_SLIDE_FRAMES`, since it covers two
+cells in one step. `LGGameService`'s `service_move` (the `OP_MOVE`
+backing) needed no changes: it already pre-checks with
+`lg_map_can_enter_from()`, so it agrees with `lg_player_step()` about a
+ledge the same way it already does about elevation. This is our own
+generic placeholder ledge encoding, not verified LeafGreen
+ledge/metatile-behavior data. See `tests/host/test_overworld.c`.
+
 ## Tile-triggered warps (`LGOverworldRunner`)
 
 `lg_map_warp_at()` already resolved a cell's warp, and `OP_WARP` already

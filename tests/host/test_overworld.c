@@ -65,5 +65,37 @@ int main(void){
  lg_player_step(&r,&sm,1,0);
  assert(r.x==1 && r.y==1 && r.facing==1 && r.moving==0);
 
+ /* Ledges: a nonzero LGMapCell.ledge only lets a step through when moving
+    in its one required direction (ledge - 1, matching LGPlayer.facing
+    values), jumping straight over the ledge tile onto the cell beyond
+    it. 4x1 row: player at x=0, ledge at x=1 (jumpable only moving right),
+    landing at x=2. */
+ LGMapCell lc[4]={0};
+ lc[1].ledge=2; /* facing 1 (right) + 1 */
+ LGMap lm={4,1,lc};
+ LGPlayer lp={0,0,0,0};
+ lg_player_step(&lp,&lm,1,0); /* step right onto the ledge tile */
+ assert(lp.x==2 && lp.y==0 && lp.facing==1);
+ assert(lp.moving==(uint8_t)(LG_PLAYER_SLIDE_FRAMES*2)); /* double duration: two cells */
+
+ /* Approaching the same ledge from the wrong direction is blocked, same
+    as a collision tile -- it only turns to face it. */
+ LGPlayer lp2={2,0,0,0};
+ lg_player_step(&lp2,&lm,-1,0); /* step left back onto the ledge tile */
+ assert(lp2.x==2 && lp2.y==0 && lp2.facing==3 && lp2.moving==0);
+
+ /* A blocked landing cell refuses the whole jump, not a partial one. */
+ LGMapCell lc2[4]={0};
+ lc2[1].ledge=2;
+ lc2[2].collision=1; /* landing cell blocked */
+ LGMap lm2={4,1,lc2};
+ LGPlayer lp3={0,0,0,0};
+ lg_player_step(&lp3,&lm2,1,0);
+ assert(lp3.x==0 && lp3.y==0 && lp3.facing==1 && lp3.moving==0);
+
+ /* lg_map_can_enter_from() itself reflects the same rule directly. */
+ assert(lg_map_can_enter_from(&lm,0,0,1,0)==1); /* rightward: matches ledge */
+ assert(lg_map_can_enter_from(&lm,2,0,1,0)==0); /* leftward: wrong direction */
+
  return 0;
 }
