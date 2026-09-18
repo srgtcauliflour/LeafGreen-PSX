@@ -10,7 +10,11 @@
    a real game loop needs exactly one function to call every frame.
    LGOverworldRunner is that: while idle it takes free-roam input and
    checks for an interact; once a script starts, it drives that script
-   with LGGameLoop until done, then returns to idle. */
+   with LGGameLoop until done, then returns to idle. If the script warped
+   to a map registered in the service's LGMapEntry table (see
+   lg_game_service_set_map_table()), the runner's own events/event_count
+   follow that entry's on the way back to idle, so interacting stays
+   correct for whichever map is now active -- not the one the player left. */
 typedef enum { LG_RUNNER_MODE_IDLE, LG_RUNNER_MODE_SCRIPT } LGRunnerMode;
 
 typedef enum {

@@ -80,7 +80,11 @@ entry's, so the next `OP_MOVE`/`OP_WARP` acts against the destination map
 loading, so it's only as real as whatever maps the caller already holds
 in memory. A `dest_map` absent from the table still moves the player but
 leaves the active map alone (e.g. until real CD/resource loading for that
-destination exists).
+destination exists). `LGMapEntry` also carries the destination map's own
+`LGObjectEvent` table (`events`/`event_count`) -- `LGOverworldRunner`
+(runner.h) uses this to keep its interact list following whichever map is
+actually active; see WORK-HANDOFF.md's "Object events follow map
+switches" entry.
 
 This wiring is scaffolding, not a finished event system: it has no real M0
 script bytecode, map data or PS1 runtime evidence behind it yet, so it does

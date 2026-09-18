@@ -70,7 +70,7 @@ int main(void) {
     map_b_cells[1 * 2 + 1].warp = 3; /* (1,1) */
     LGMap map_b = {2, 2, map_b_cells};
     LGWarp map_b_warps[] = {{3, 7, 1, 2}}; /* back to map A's warp tile */
-    LGMapEntry table[] = {{42, &map_b, map_b_warps, 1}};
+    LGMapEntry table[] = {{42, &map_b, map_b_warps, 1, 0, 0}};
 
     LGPlayer player_x = {1, 1, 0, 0};
     LGGameService svc_x;
