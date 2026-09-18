@@ -16,7 +16,10 @@ independently of how maps are linked in memory. Warp ids are a portable
 indirection, not real LeafGreen warp indices: no ROM evidence maps actual
 door/stairs ids yet, and this does not decide when a warp fires (map edge,
 a specific tile, an object event) — that policy, and the real per-map warp
-data, belong to a later, evidence-based step.
+data, belong to a later, evidence-based step. Actually switching the
+active map on a resolved warp is `LGGameService`'s job (an optional
+caller-supplied `LGMapEntry` table), not this module's -- see
+SCRIPT-VM.md's "Game service integration" section.
 
 ## Input-driven movement (`lg/input_control.h`)
 

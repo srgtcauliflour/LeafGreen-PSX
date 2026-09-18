@@ -18,11 +18,20 @@ static bool service_text(void *context, uint8_t text_id) {
 static bool service_warp(void *context, uint8_t warp_id) {
     LGGameService *svc = context;
     for (size_t i = 0; i < svc->warp_count; ++i) {
-        if (svc->warps[i].id == warp_id) {
-            svc->has_pending_warp = true;
-            svc->pending_warp = &svc->warps[i];
-            return true;
+        if (svc->warps[i].id != warp_id) continue;
+        const LGWarp *warp = &svc->warps[i];
+        svc->has_pending_warp = true;
+        svc->pending_warp = warp;
+        svc->player->x = warp->dest_x;
+        svc->player->y = warp->dest_y;
+        for (size_t j = 0; j < svc->map_table_count; ++j) {
+            if (svc->map_table[j].map_id != warp->dest_map) continue;
+            svc->map = svc->map_table[j].map;
+            svc->warps = svc->map_table[j].warps;
+            svc->warp_count = svc->map_table[j].warp_count;
+            break;
         }
+        return true;
     }
     return false;
 }
@@ -34,10 +43,19 @@ void lg_game_service_init(LGGameService *svc, LGPlayer *player, const LGMap *map
     svc->map = map;
     svc->warps = warps;
     svc->warp_count = warp_count;
+    svc->map_table = 0;
+    svc->map_table_count = 0;
     svc->has_pending_text = false;
     svc->pending_text_id = 0;
     svc->has_pending_warp = false;
     svc->pending_warp = 0;
+}
+
+void lg_game_service_set_map_table(LGGameService *svc, const LGMapEntry *table,
+                                    size_t count) {
+    if (!svc) return;
+    svc->map_table = table;
+    svc->map_table_count = count;
 }
 
 void lg_game_service_bind(LGGameService *svc, LGScriptVM *vm) {

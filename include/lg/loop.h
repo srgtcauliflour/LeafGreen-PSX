@@ -20,13 +20,15 @@ typedef bool (*LGLoopTextLookupFn)(void *context, uint8_t text_id,
 
    OP_MOVE's BLOCKED wait is resolved immediately (movement is
    synchronous today -- no multi-frame tile slide exists yet). OP_WARP's
-   BLOCKED wait applies the resolved warp's destination x/y to the player
-   and is also resolved immediately; it does NOT swap the active map --
-   that needs real resource loading this scaffolding doesn't have, so a
-   warp across maps is still a caller responsibility. OP_TEXT's BLOCKED
-   wait opens a real LGWindowState via text_lookup_fn and is only
-   resolved once that window reports LG_WINDOW_DONE, since dialogue
-   genuinely spans multiple frames. */
+   BLOCKED wait is also resolved immediately: LGGameService already
+   applied the resolved warp's destination x/y, and switched the active
+   map/warp table too if a map table was registered with
+   lg_game_service_set_map_table() (see service.h) -- otherwise the
+   player moves but the map is unchanged, e.g. while real CD/resource
+   loading for the destination doesn't exist yet. OP_TEXT's BLOCKED wait
+   opens a real LGWindowState via text_lookup_fn and is only resolved
+   once that window reports LG_WINDOW_DONE, since dialogue genuinely
+   spans multiple frames. */
 typedef struct {
     LGScriptVM *vm;
     LGGameService *service;
