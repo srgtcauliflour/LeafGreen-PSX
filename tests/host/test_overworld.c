@@ -3,7 +3,13 @@
 int main(void){
  LGMapCell c[9]={0}; c[5].collision=1; LGMap m={3,3,c}; LGPlayer p={1,1,0,0};
  lg_player_step(&p,&m,1,0); assert(p.x==1&&p.y==1);
+ assert(p.moving==0); /* blocked: turned to face it, no slide to animate */
  lg_player_step(&p,&m,0,1); assert(p.x==1&&p.y==2);
+ assert(p.moving==LG_PLAYER_SLIDE_FRAMES); /* moved: a renderer can animate this */
+ lg_player_animate_tick(&p); assert(p.moving==LG_PLAYER_SLIDE_FRAMES-1);
+ for (int i=0;i<LG_PLAYER_SLIDE_FRAMES;i++) lg_player_animate_tick(&p);
+ assert(p.moving==0); /* never underflows past 0 */
+ lg_player_animate_tick(0); /* no-op, doesn't crash */
  assert(!lg_map_can_enter(&m,-1,0));
 
  c[7].warp=1;

@@ -6,12 +6,29 @@
    indices: no ROM evidence maps real door/stairs ids yet. */
 typedef struct { uint16_t metatile; uint8_t collision; uint8_t elevation; uint8_t warp; } LGMapCell;
 typedef struct { uint16_t width,height; const LGMapCell *cells; } LGMap;
+/* moving: frames remaining of a tile-slide animation a renderer can use
+   to interpolate sprite position, counted down by lg_player_animate_tick().
+   x/y already hold the destination tile the instant a step succeeds --
+   there is no multi-tile-slide delay to movement/collision itself, only
+   to this presentation hint. */
 typedef struct { int16_t x,y; int8_t facing; uint8_t moving; } LGPlayer;
+/* Placeholder tile-slide duration in frames for LGPlayer.moving: no
+   ROM/hardware-verified LeafGreen movement timing backs this number yet. */
+#define LG_PLAYER_SLIDE_FRAMES 4
 /* dest_map is a logical resource id (see resource.h), not a pointer, so a
    warp table can be authored/serialized without wiring maps together. */
 typedef struct { uint8_t id; uint16_t dest_map; int16_t dest_x, dest_y; } LGWarp;
 int lg_map_can_enter(const LGMap *map, int x, int y);
+/* Sets p->moving to LG_PLAYER_SLIDE_FRAMES when the step actually moves
+   the player (not when only turning to face a blocked direction), for a
+   renderer to animate. This never blocks or paces the step itself --
+   lg_player_step() always applies immediately regardless of any slide
+   already in progress; call lg_player_animate_tick() once per frame to
+   count it down. */
 void lg_player_step(LGPlayer *p, const LGMap *map, int dx, int dy);
+/* Counts down p->moving by one frame if it is nonzero. No-op at 0 or on
+   a NULL player. */
+void lg_player_animate_tick(LGPlayer *p);
 /* Returns the matching warp for the cell at (x, y), or NULL when the
    coordinates are out of bounds, the cell has no warp, or no table entry
    matches its id (an incomplete table is not a crash). */
