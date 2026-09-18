@@ -34,3 +34,43 @@ rejecting callback are all script errors. An accepting callback blocks the
 VM exactly like `OP_TEXT` does, since a real move is a multi-frame slide
 into the next tile, not a one-step VM action; the caller calls
 `lg_script_unblock()` once that finishes.
+
+## Warp service callback (`OP_WARP`)
+
+`lg_script_set_warp_fn(vm, fn, context)` registers `LGScriptWarpFn`
+(`bool fn(void *context, uint8_t warp_id)`). `OP_WARP` reads a 1-byte warp
+id (see `LGWarp.id` in overworld.h -- a portable indirection, not a
+LeafGreen warp index) and calls it; a missing or rejecting callback (an id
+absent from the service's warp table) is a script error. An accepting
+callback blocks the VM the same way, since a warp can mean an async CD
+resource swap for the destination map/area bundle, not a same-step action.
+
+## Flags (`OP_FLAG_SET`, `OP_JUMP_IF_FLAG`)
+
+`LGScriptVM` carries 256 single-bit flags (`flags[32]`), separate from the
+16-bit `vars`, needing no callback since they're pure VM state. `OP_FLAG_SET`
+(id, value) sets or clears a flag; `OP_JUMP_IF_FLAG` (id, value, little-endian
+absolute address) jumps there when the flag currently equals value, otherwise
+falls through to the next instruction. The jump target is always bounds-
+checked against the code size up front, even when the branch isn't taken --
+consistent with how `OP_SET`/`OP_ADD` validate their var index regardless of
+which branch executes. A jump only moves `pc`; the instruction at the target
+executes on the following `lg_script_step()` call, not the same one.
+
+## Game service integration (`lg/service.h`)
+
+`LGGameService` (`src/game/service.c`) wires `OP_MOVE`/`OP_TEXT`/`OP_WARP`
+to the real portable overworld model via `lg_game_service_bind(svc, vm)`:
+`OP_MOVE` resolves through `lg_map_can_enter()`/`lg_player_step()`, `OP_WARP`
+searches a caller-supplied `LGWarp` table for a matching id. Both are
+resolved synchronously today (there is no multi-frame tile slide or async CD
+warp yet), so a caller may call `lg_script_unblock()` immediately after a
+`BLOCKED` step from either. `OP_TEXT` only records the requested id in
+`pending_text_id`; the caller must still drive its own `LGWindowState`/font
+backend and unblock only once that reports `LG_WINDOW_DONE`, since dialogue
+genuinely spans multiple frames. See `tests/host/test_service.c` for a full
+script run (move, request text, request warp) exercised end to end.
+
+This wiring is scaffolding, not a finished event system: it has no real M0
+script bytecode, map data or PS1 runtime evidence behind it yet, so it does
+not complete LGPSX-012 through LGPSX-019 on its own.

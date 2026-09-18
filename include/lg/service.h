@@ -1,0 +1,42 @@
+#ifndef LG_SERVICE_H
+#define LG_SERVICE_H
+#include "lg/overworld.h"
+#include "lg/script.h"
+
+/* Wires LGScriptVM's game-service callbacks (OP_MOVE/OP_TEXT/OP_WARP) to
+   the real portable overworld model, so a script can actually move the
+   player and request dialogue/warps instead of only exercising the VM in
+   isolation. It stays platform-neutral: no PS1 GPU/controller/CD calls,
+   no font/window rendering (that needs widths/a sink the caller owns).
+
+   Movement and warp lookups are resolved synchronously here -- there is
+   no multi-frame tile slide or async CD warp yet, so it is correct for a
+   caller to call lg_script_unblock() immediately after a BLOCKED
+   OP_MOVE/OP_WARP step returns. OP_TEXT is different: dialogue really
+   does take multiple frames, so this only records the requested id; the
+   caller must drive its own LGWindowState/font backend from
+   pending_text_id and only unblock once that reports LG_WINDOW_DONE. */
+typedef struct {
+    LGPlayer *player;
+    const LGMap *map;
+    const LGWarp *warps;
+    size_t warp_count;
+
+    bool has_pending_text;
+    uint8_t pending_text_id;
+
+    bool has_pending_warp;
+    const LGWarp *pending_warp; /* valid only while has_pending_warp is true */
+} LGGameService;
+
+void lg_game_service_init(LGGameService *svc, LGPlayer *player, const LGMap *map,
+                           const LGWarp *warps, size_t warp_count);
+/* Registers this service's move/text/warp callbacks on vm. The service
+   must outlive the VM (or be re-bound after any lg_script_init()), since
+   the VM only stores the callback pointers and this context pointer. */
+void lg_game_service_bind(LGGameService *svc, LGScriptVM *vm);
+/* Clears has_pending_text/has_pending_warp; call once the caller has
+   consumed and fully resolved that request (e.g. after unblocking the
+   VM), so a later request isn't confused with a stale one. */
+void lg_game_service_clear_pending(LGGameService *svc);
+#endif
