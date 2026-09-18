@@ -299,5 +299,22 @@ NULL argument, never a partial copy. `tests/host/test_save_game.c` now
 round-trips real player/VM state (via a script that sets a flag) through
 capture -> write -> read -> apply, and checks every NULL-argument no-op.
 
+## Object events follow map switches (2026-09-18)
+
+`LGMapEntry` (service.h) gained `events`/`event_count`: the destination
+map's own `LGObjectEvent` table, alongside the `map`/`warps` it already
+carried. `LGOverworldRunner` (runner.c) uses this: after a script's warp
+switches `service->map` via a registered table entry, once that script
+finishes (`LG_RUNNER_STEP_SCRIPT_DONE`/`_ERROR`) the runner's own
+`events`/`event_count` follow the matching entry's, so interacting stays
+correct for whichever map is now active instead of still offering to talk
+to NPCs on the map the player just left. If no table entry matches the
+new map, events are left as they were -- the same "leave unresolved
+rather than guess" choice `LGGameService` itself makes for `map`/`warps`
+in that situation. `tests/host/test_runner.c` covers a full script-warp
+round trip: the service's map switches immediately when the warp
+resolves, but the runner's events only follow once the script actually
+finishes.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

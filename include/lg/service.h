@@ -4,15 +4,21 @@
 #include "lg/script.h"
 
 /* A destination a warp can switch to: dest_map (see LGWarp.dest_map)
-   matched against map_id, plus that destination map's own cells and warp
-   table. This is a caller-supplied, statically-known table lookup, not
-   resource loading -- there is no CD read here, so it's only as real as
-   whatever maps/warps the caller already has in memory. */
+   matched against map_id, plus that destination map's own cells, warp
+   table and object events (LGObjectEvent, see overworld.h -- runner.h's
+   LGOverworldRunner uses this to keep its interact list in sync with
+   whichever map is actually active). This is a caller-supplied,
+   statically-known table lookup, not resource loading -- there is no CD
+   read here, so it's only as real as whatever maps/warps/events the
+   caller already has in memory. events/event_count may be left 0/0 for
+   a map with nothing to interact with. */
 typedef struct {
     uint16_t map_id;
     const LGMap *map;
     const LGWarp *warps;
     size_t warp_count;
+    const LGObjectEvent *events;
+    size_t event_count;
 } LGMapEntry;
 
 /* Wires LGScriptVM's game-service callbacks (OP_MOVE/OP_TEXT/OP_WARP) to
