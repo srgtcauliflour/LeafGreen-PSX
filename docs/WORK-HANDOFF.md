@@ -215,5 +215,17 @@ simplified accordingly (it no longer special-cases warp position, since
 the service already applies it). `tests/host/test_service.c` covers both
 the matched and unmatched cases. See SCRIPT-VM.md.
 
+## Object events (2026-09-18)
+
+`LGObjectEvent` (`x`, `y`, `script_id`) plus `lg_object_event_facing()`
+add the missing piece for NPC/sign interaction: it finds the event on the
+tile the player is facing (one step in the direction of `player->facing`),
+so a caller can wire an "interact" button press to starting a script.
+`script_id` is our own indirection into a caller's script table, not a
+LeafGreen event id. It only finds the event; it doesn't decide when to
+call it or run anything. `tests/host/test_overworld.c` covers all four
+facings, a tile with nothing on it, an unrecognised facing value, and
+NULL args.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
