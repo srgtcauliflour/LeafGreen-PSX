@@ -23,21 +23,23 @@ typedef struct {
 } LGMapEntry;
 
 /* Wires LGScriptVM's game-service callbacks
-   (OP_MOVE/OP_TEXT/OP_WARP/OP_ITEM/OP_ITEM_TAKE) to the real portable
-   overworld model, so a script can actually move the player and request
-   dialogue/warps/item gain-or-loss instead of only exercising the VM in
-   isolation. It stays platform-neutral: no PS1 GPU/controller/CD calls,
-   no font/window rendering (that needs widths/a sink the caller owns).
+   (OP_MOVE/OP_TEXT/OP_WARP/OP_ITEM/OP_ITEM_TAKE/OP_CHOICE) to the real
+   portable overworld model, so a script can actually move the player and
+   request dialogue/warps/item gain-or-loss/choices instead of only
+   exercising the VM in isolation. It stays platform-neutral: no PS1
+   GPU/controller/CD calls, no font/window/menu rendering (that needs
+   widths/a sink/input the caller owns).
 
    Movement, warp and item mutations are resolved synchronously here --
    there is no multi-frame tile slide, async CD warp or item-pickup
    animation yet, so it is correct for a caller to call
    lg_script_unblock() immediately after a BLOCKED
-   OP_MOVE/OP_WARP/OP_ITEM/OP_ITEM_TAKE step returns. OP_TEXT is
-   different: dialogue really does take multiple frames, so this only
-   records the requested id; the caller must drive its own
-   LGWindowState/font backend from pending_text_id and only unblock once
-   that reports LG_WINDOW_DONE. */
+   OP_MOVE/OP_WARP/OP_ITEM/OP_ITEM_TAKE step returns. OP_TEXT and
+   OP_CHOICE are different: dialogue and reading a player's menu
+   selection both genuinely take multiple frames, so these only record
+   the requested id (and, for OP_CHOICE, the var to write); the caller
+   must drive its own LGWindowState/menu, write the selected option into
+   vm->vars[pending_choice_var] once confirmed, and only then unblock. */
 typedef struct {
     LGPlayer *player;
     const LGMap *map;
@@ -62,6 +64,10 @@ typedef struct {
     bool has_pending_item_take;
     uint8_t pending_item_take_id;
     uint16_t pending_item_take_quantity;
+
+    bool has_pending_choice;
+    uint8_t pending_choice_id;
+    uint8_t pending_choice_var;
 } LGGameService;
 
 void lg_game_service_init(LGGameService *svc, LGPlayer *player, const LGMap *map,
@@ -92,14 +98,14 @@ void lg_game_service_set_inventory(LGGameService *svc, LGInventory *inv);
    lg_map_warp_at() in overworld.h), the same way LeafGreen walks the
    player through a door tile with no separate button press or script. */
 void lg_game_service_apply_warp(LGGameService *svc, const LGWarp *warp);
-/* Registers this service's move/text/warp/item callbacks on vm. The
-   service must outlive the VM (or be re-bound after any
+/* Registers this service's move/text/warp/item/choice callbacks on vm.
+   The service must outlive the VM (or be re-bound after any
    lg_script_init()), since the VM only stores the callback pointers and
    this context pointer. */
 void lg_game_service_bind(LGGameService *svc, LGScriptVM *vm);
 /* Clears has_pending_text/has_pending_warp/has_pending_item/
-   has_pending_item_take; call once the caller has consumed and fully
-   resolved that request (e.g. after unblocking the VM), so a later
-   request isn't confused with a stale one. */
+   has_pending_item_take/has_pending_choice; call once the caller has
+   consumed and fully resolved that request (e.g. after unblocking the
+   VM), so a later request isn't confused with a stale one. */
 void lg_game_service_clear_pending(LGGameService *svc);
 #endif

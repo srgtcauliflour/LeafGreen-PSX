@@ -188,5 +188,24 @@ int main(void) {
     assert(lg_script_step(&vm_short) == LG_SCRIPT_ERROR);
     assert(!svc_short.has_pending_item_take);
 
+    /* OP_CHOICE blocks the same way, recording the requested prompt id
+       and var index (the caller writes the selection into vm.vars
+       itself once its own menu/window resolves, then unblocks). */
+    LGGameService svc_choice;
+    LGScriptVM vm_choice;
+    lg_game_service_init(&svc_choice, &player_z, &map, 0, 0);
+    const uint8_t choice_script[] = {11,2,5, 0}; /* OP_CHOICE id=2 var=5 */
+    lg_script_init(&vm_choice, choice_script, sizeof choice_script);
+    lg_game_service_bind(&svc_choice, &vm_choice);
+    assert(lg_script_step(&vm_choice) == LG_SCRIPT_BLOCKED);
+    assert(svc_choice.has_pending_choice && svc_choice.pending_choice_id == 2);
+    assert(svc_choice.pending_choice_var == 5);
+    vm_choice.vars[5] = 1;
+    lg_game_service_clear_pending(&svc_choice);
+    assert(!svc_choice.has_pending_choice);
+    lg_script_unblock(&vm_choice);
+    assert(lg_script_step(&vm_choice) == LG_SCRIPT_DONE);
+    assert(vm_choice.vars[5] == 1);
+
     return 0;
 }

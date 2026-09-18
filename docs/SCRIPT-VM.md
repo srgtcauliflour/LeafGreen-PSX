@@ -88,6 +88,33 @@ fields from `OP_ITEM`'s, so a pending grant and a pending removal are
 never confused with each other). See `tests/host/test_script.c` and
 `tests/host/test_service.c` for the VM-level and service-level coverage.
 
+## Choice service callback (`OP_CHOICE`)
+
+`lg_script_set_choice_fn(vm, fn, context)` registers `LGScriptChoiceFn`
+(`bool fn(void *context, uint8_t choice_id, uint8_t var_index)`).
+`OP_CHOICE` reads a 1-byte choice-prompt id (a portable indirection, the
+same idea as `OP_TEXT`'s `text_id` -- not a LeafGreen menu index) and a
+1-byte var index, already bounds-checked against the VM's 32 vars before
+the callback ever sees it; a missing or rejecting callback (an id the
+service doesn't recognise) is a script error. An accepting callback
+blocks the VM exactly like `OP_TEXT` does: presenting a prompt (e.g.
+Yes/No) and reading the player's selection genuinely spans multiple
+frames, so the caller drives its own menu/window, writes the selected
+option directly into `vm->vars[var_index]` once the player confirms, and
+only then calls `lg_script_unblock()`. There is no dedicated "jump if
+var equals" opcode yet, so branching on the result is left to the
+caller/script author for now -- this establishes the blocking/callback
+mechanism, not a full menu/branching system.
+
+`LGGameService` wires this the same way as `OP_TEXT`: a resolved
+`OP_CHOICE` only records `has_pending_choice`/`pending_choice_id`/
+`pending_choice_var` -- it does not decide when the prompt is done or
+write the var itself, since only the caller's own menu/input loop knows
+that. This is the VM-side mechanism M0-ACCEPTANCE.md's "Oak intro
+progresses through required dialogue/choices" needs, not verified
+LeafGreen choice/menu data. See `tests/host/test_script.c` and
+`tests/host/test_service.c`.
+
 ## Flags (`OP_FLAG_SET`, `OP_JUMP_IF_FLAG`)
 
 `LGScriptVM` carries 256 single-bit flags (`flags[32]`), separate from the
@@ -102,8 +129,9 @@ executes on the following `lg_script_step()` call, not the same one.
 
 ## Game service integration (`lg/service.h`)
 
-`LGGameService` (`src/game/service.c`) wires `OP_MOVE`/`OP_TEXT`/`OP_WARP`
-to the real portable overworld model via `lg_game_service_bind(svc, vm)`:
+`LGGameService` (`src/game/service.c`) wires
+`OP_MOVE`/`OP_TEXT`/`OP_WARP`/`OP_CHOICE` to the real portable overworld
+model via `lg_game_service_bind(svc, vm)`:
 `OP_MOVE` resolves through `lg_map_can_enter_from()`/`lg_player_step()` (so
 an elevation-incompatible move is a script error too, same as a
 collision-blocked one -- see OVERWORLD.md's "Elevation-gated movement"),
