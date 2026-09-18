@@ -459,5 +459,22 @@ script-driven warp already does. `tests/host/test_runner.c` covers
 stepping onto a warp tile (including following a registered
 `LGMapEntry`) and that a plain tile still returns idle.
 
+## Ledges (2026-09-18)
+
+`LGMapCell` gained a `ledge` field (0 = none, else `facing + 1` for the
+one direction it can be jumped in), closing another item OVERWORLD.md's
+opening paragraph flagged as unfinished. `lg_map_can_enter_from()` now
+refuses entering a ledge cell from the wrong direction (elevation isn't
+considered for a ledge cell at all); `lg_player_step()` uses the same
+check and, on a matching step, jumps straight over the ledge cell onto
+the cell beyond it (skipping it as a landing spot), refusing the whole
+step if that landing cell isn't enterable. `moving` is set to twice
+`LG_PLAYER_SLIDE_FRAMES` for a ledge jump. `LGGameService`'s
+`service_move` needed no change -- it already pre-checks with
+`lg_map_can_enter_from()`, so it can't disagree with `lg_player_step()`
+about a ledge, same as it already couldn't about elevation.
+`tests/host/test_overworld.c` covers the jump, wrong-direction entry,
+and a blocked landing cell.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
