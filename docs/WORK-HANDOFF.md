@@ -173,5 +173,18 @@ so it stays host-testable, but it is still scaffolding, not a completed
 LGPSX-012 through LGPSX-020 -- those still need real converted map/script
 data, a real font backend, and PS1/emulator runtime evidence.
 
+## M0 save payload (2026-09-18)
+
+`include/lg/save_game.h` + `src/game/save_game.c` add `LGSaveGamePayload`
+(player x/y/facing plus the 256 script flags) as the first concrete
+schema behind the `LGSV` envelope reserved in save.h -- SAVE-FORMAT.md
+had explicitly deferred this until game-state models existed to
+serialize, and now `LGPlayer`/`LGScriptVM.flags` do. `lg_save_game_write()`/
+`lg_save_game_read()` round-trip it through a header with save
+id/size/CRC32, rejecting any truncation, magic/version/size mismatch or
+corruption. `tests/host/test_save_game.c` covers the round trip and every
+rejection case. Still M0-only (no inventory/party/etc.) and in-memory
+only -- no PS1 memory-card I/O exists yet.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
