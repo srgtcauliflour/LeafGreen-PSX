@@ -34,4 +34,16 @@ verified LeafGreen input handling (no turn-then-walk on the first press,
 no running/biking) -- real semantics need ROM evidence, same caveat as
 everywhere else in this module. See `tests/host/test_input_control.c`.
 
+## Object events (`LGObjectEvent`)
+
+`lg_object_event_facing(player, events, count)` finds the static
+NPC/sign/object standing on the tile the player is facing (one step from
+`player->x/y` toward `player->facing`, the same values `lg_player_step()`
+assigns), or `NULL` if nothing is there. This is how a caller finds what
+an "interact" button press should trigger; it does not decide when to
+call it or run any script. `LGObjectEvent.script_id` is a portable
+indirection into a caller's own script table (the same idea as
+`LGScriptTextFn`'s `text_id`), not a LeafGreen object-event id -- no ROM
+evidence maps real NPC/event ids yet.
+
 This is preparatory work for LGPSX-012 through LGPSX-018; it is not marked complete until converted real M0 maps render and behave correctly.

@@ -15,5 +15,21 @@ int main(void){
  c[8].warp=9; /* id with no matching table entry */
  assert(!lg_map_warp_at(&m,2,2,warps,2));
  assert(!lg_map_warp_at(&m,1,2,0,0)); /* no table at all */
+
+ /* Player at (1,1); an NPC sits one tile below at (1,2). */
+ LGPlayer q={1,1,0,0};
+ LGObjectEvent events[]={{1,2,5},{2,2,9}};
+ q.facing=2; /* down */
+ const LGObjectEvent *e=lg_object_event_facing(&q,events,2);
+ assert(e && e->script_id==5);
+ q.facing=0; /* up: nothing at (1,0) */
+ assert(!lg_object_event_facing(&q,events,2));
+ q.facing=1; /* right: (2,1) is empty, the NPC is at (2,2) */
+ assert(!lg_object_event_facing(&q,events,2));
+ q.facing=(int8_t)99; /* unrecognised facing value */
+ assert(!lg_object_event_facing(&q,events,2));
+ assert(!lg_object_event_facing(0,events,2));
+ assert(!lg_object_event_facing(&q,0,2));
+
  return 0;
 }

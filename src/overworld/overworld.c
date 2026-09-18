@@ -17,3 +17,17 @@ const LGWarp *lg_map_warp_at(const LGMap *m,int x,int y,const LGWarp *warps,size
  for(size_t i=0;i<count;i++) if(warps[i].id==id) return &warps[i];
  return 0;
 }
+const LGObjectEvent *lg_object_event_facing(const LGPlayer *p,const LGObjectEvent *events,size_t count){
+ if(!p||!events) return 0;
+ int dx=0,dy=0;
+ switch(p->facing){
+ case 0:dy=-1;break;
+ case 1:dx=1;break;
+ case 2:dy=1;break;
+ case 3:dx=-1;break;
+ default:return 0;
+ }
+ int16_t tx=(int16_t)(p->x+dx), ty=(int16_t)(p->y+dy);
+ for(size_t i=0;i<count;i++) if(events[i].x==tx&&events[i].y==ty) return &events[i];
+ return 0;
+}
