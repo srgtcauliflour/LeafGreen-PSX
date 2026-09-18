@@ -19,12 +19,29 @@ typedef struct { int16_t x,y; int8_t facing; uint8_t moving; } LGPlayer;
    warp table can be authored/serialized without wiring maps together. */
 typedef struct { uint8_t id; uint16_t dest_map; int16_t dest_x, dest_y; } LGWarp;
 int lg_map_can_enter(const LGMap *map, int x, int y);
+/* Elevation-aware entry check: (to_x, to_y) must first pass
+   lg_map_can_enter() (bounds + collision), and then its LGMapCell.elevation
+   must be compatible with the cell the player is stepping from at
+   (from_x, from_y). Elevation 0 is a wildcard on either end (e.g. a
+   bridge or stairs tile that connects any level) -- otherwise the two
+   cells' elevation values must match exactly, so a player can't cross
+   directly between two different nonzero elevations without a
+   connecting tile. An out-of-bounds (from_x, from_y) (e.g. no map
+   context yet) skips the elevation comparison and only checks
+   lg_map_can_enter() on the destination. This is our own generic
+   placeholder rule, not verified LeafGreen elevation behaviour -- no ROM
+   evidence backs these exact semantics yet, only that OVERWORLD.md
+   already flagged "elevation interactions" as unfinished. */
+int lg_map_can_enter_from(const LGMap *map, int from_x, int from_y,
+                           int to_x, int to_y);
 /* Sets p->moving to LG_PLAYER_SLIDE_FRAMES when the step actually moves
    the player (not when only turning to face a blocked direction), for a
    renderer to animate. This never blocks or paces the step itself --
    lg_player_step() always applies immediately regardless of any slide
    already in progress; call lg_player_animate_tick() once per frame to
-   count it down. */
+   count it down. Uses lg_map_can_enter_from() (not just lg_map_can_enter())
+   so a step is also refused when the destination's elevation is
+   incompatible with the player's current cell. */
 void lg_player_step(LGPlayer *p, const LGMap *map, int dx, int dy);
 /* Counts down p->moving by one frame if it is nonzero. No-op at 0 or on
    a NULL player. */

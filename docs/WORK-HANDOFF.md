@@ -421,5 +421,25 @@ error, same as any other unresolvable service call.
 level; `tests/host/test_service.c` covers the `LGGameService` wiring and
 its error paths.
 
+## Elevation-gated movement (2026-09-18)
+
+`LGMapCell.elevation` existed since M0's first commit but nothing ever
+read it -- OVERWORLD.md already flagged "elevation interactions" as
+unfinished. Added `lg_map_can_enter_from(map, from_x, from_y, to_x, to_y)`
+(overworld.h/c): elevation 0 is a wildcard on either end, otherwise the
+source and destination cells' elevation must match exactly, on top of
+the existing bounds+collision check. `lg_player_step()` now uses it
+instead of the plain `lg_map_can_enter()`, so an elevation-incompatible
+step turns-without-moving, same as a collision-blocked one.
+
+`LGGameService`'s `service_move` (the `OP_MOVE` backing) was updated to
+pre-check with `lg_map_can_enter_from()` too, instead of the plain
+check -- otherwise a script's `OP_MOVE` could think a move succeeded
+(and block/unblock as if it had) while `lg_player_step()` silently
+refused it internally for an elevation mismatch, letting the two paths
+disagree. This is our own generic placeholder rule, not verified
+LeafGreen elevation behaviour. `tests/host/test_overworld.c` covers the
+new function directly and `lg_player_step()`'s elevation-blocked case.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

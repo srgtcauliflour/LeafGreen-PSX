@@ -3,7 +3,7 @@
 static bool service_move(void *context, int8_t dx, int8_t dy) {
     LGGameService *svc = context;
     int nx = svc->player->x + dx, ny = svc->player->y + dy;
-    if (!lg_map_can_enter(svc->map, nx, ny)) return false;
+    if (!lg_map_can_enter_from(svc->map, svc->player->x, svc->player->y, nx, ny)) return false;
     lg_player_step(svc->player, svc->map, dx, dy);
     return true;
 }
