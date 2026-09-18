@@ -240,5 +240,30 @@ bundle data and CD loading exist. `tests/host/test_resource.c` covers the
 happy path, wrong kind, missing id, an exact-fit boundary, one byte over,
 an offset alone past the buffer, and invalid arguments.
 
+## Interact orchestrator (2026-09-18)
+
+`include/lg/interact.h` + `src/game/interact.c` add
+`lg_overworld_try_interact()`, the last piece connecting free-roam input
+to scripted events: on a newly pressed A button, if the player is facing
+an `LGObjectEvent` (`lg_object_event_facing()`) and a caller-supplied
+`LGInteractScriptLookupFn` resolves its `script_id` to bytecode, it starts
+that script (`lg_script_init()`) and binds an `LGGameService` to it
+(`lg_game_service_bind()`) -- the caller drives it with `LGGameLoop` from
+the next frame on. No press, no facing event, or an unknown `script_id`
+are all `LG_INTERACT_NONE`, not errors; only invalid arguments are
+`LG_INTERACT_ERROR`. `tests/host/test_interact.c` covers all of these,
+including that the started script actually runs.
+
+This closes the chain built across this session: free-roam movement
+(`lg_overworld_input_step`) -> facing an object
+(`lg_object_event_facing`) -> starting its script
+(`lg_overworld_try_interact`) -> driving it frame by frame
+(`LGGameLoop`/`LGGameService`) -> dialogue/warps/flags within it
+(`LGScriptVM`) -> persisting the result (`LGSaveGamePayload`). All of it
+remains scaffolding until real M0 map/script/text data, a real font
+backend, and PS1/emulator runtime evidence exist -- see the acceptance
+gates in M0-ACCEPTANCE.md and M0-PALLET-TOWN.md, none of which this
+closes on its own.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

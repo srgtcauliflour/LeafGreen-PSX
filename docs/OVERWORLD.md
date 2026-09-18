@@ -46,4 +46,18 @@ indirection into a caller's own script table (the same idea as
 `LGScriptTextFn`'s `text_id`), not a LeafGreen object-event id -- no ROM
 evidence maps real NPC/event ids yet.
 
+## Interact orchestrator (`lg/interact.h`)
+
+`lg_overworld_try_interact()` is the last piece connecting free-roam
+input to scripted events: on a newly pressed A button, if the player is
+facing an `LGObjectEvent` and a caller-supplied `LGInteractScriptLookupFn`
+resolves its `script_id` to bytecode, it starts that script
+(`lg_script_init()`) and binds an `LGGameService` to it
+(`lg_game_service_bind()`) -- the caller then drives it with `LGGameLoop`
+from the next frame on, same as any other script. No press, no facing
+event, or a `script_id` the lookup doesn't know are all
+`LG_INTERACT_NONE` (not errors -- a decorative object with no script yet
+is not a bug); only invalid arguments are `LG_INTERACT_ERROR`. See
+`tests/host/test_interact.c`.
+
 This is preparatory work for LGPSX-012 through LGPSX-018; it is not marked complete until converted real M0 maps render and behave correctly.
