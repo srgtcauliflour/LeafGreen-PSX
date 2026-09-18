@@ -22,6 +22,7 @@ typedef enum {
     LG_RUNNER_STEP_SCRIPT_STARTED, /* an interact just started a script this frame */
     LG_RUNNER_STEP_SCRIPT_RUNNING, /* the active script advanced (or is waiting) this frame */
     LG_RUNNER_STEP_SCRIPT_DONE,    /* the active script just finished; idle again next frame */
+    LG_RUNNER_STEP_WARPED,         /* free-roam movement stepped onto a warp tile; already applied */
     LG_RUNNER_STEP_ERROR           /* invalid arguments, or the script errored (now back to idle) */
 } LGRunnerStepResult;
 
@@ -47,11 +48,17 @@ void lg_overworld_runner_init(LGOverworldRunner *runner, LGPlayer *player,
    otherwise takes free-roam movement input (LG_RUNNER_STEP_IDLE). The
    interact check (and therefore the requirement that script_lookup_fn be
    non-NULL) is skipped entirely when event_count is 0, so a runner for an
-   event-free map can leave script_lookup_fn NULL. While a script is
-   running: steps it via LGGameLoop, returning to idle on LG_LOOP_DONE
-   (LG_RUNNER_STEP_SCRIPT_DONE) or LG_LOOP_ERROR (LG_RUNNER_STEP_ERROR, so
-   one broken script doesn't wedge the whole overworld), otherwise
-   LG_RUNNER_STEP_SCRIPT_RUNNING. */
+   event-free map can leave script_lookup_fn NULL. If that free-roam step
+   lands on a map cell with a warp (LGMapCell.warp, resolved against
+   service->warps via lg_map_warp_at()), the runner applies it immediately
+   via lg_game_service_apply_warp() -- moving the player and switching
+   service->map/warps/events the same way a resolved OP_WARP does -- and
+   returns LG_RUNNER_STEP_WARPED instead of LG_RUNNER_STEP_IDLE, with no
+   script or button press involved, the same way LeafGreen walks the
+   player through a door tile. While a script is running: steps it via
+   LGGameLoop, returning to idle on LG_LOOP_DONE (LG_RUNNER_STEP_SCRIPT_DONE)
+   or LG_LOOP_ERROR (LG_RUNNER_STEP_ERROR, so one broken script doesn't
+   wedge the whole overworld), otherwise LG_RUNNER_STEP_SCRIPT_RUNNING. */
 LGRunnerStepResult lg_overworld_runner_step(LGOverworldRunner *runner,
                                              const LgInputState *input,
                                              bool advance_pressed);

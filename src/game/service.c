@@ -19,21 +19,25 @@ static bool service_warp(void *context, uint8_t warp_id) {
     LGGameService *svc = context;
     for (size_t i = 0; i < svc->warp_count; ++i) {
         if (svc->warps[i].id != warp_id) continue;
-        const LGWarp *warp = &svc->warps[i];
-        svc->has_pending_warp = true;
-        svc->pending_warp = warp;
-        svc->player->x = warp->dest_x;
-        svc->player->y = warp->dest_y;
-        for (size_t j = 0; j < svc->map_table_count; ++j) {
-            if (svc->map_table[j].map_id != warp->dest_map) continue;
-            svc->map = svc->map_table[j].map;
-            svc->warps = svc->map_table[j].warps;
-            svc->warp_count = svc->map_table[j].warp_count;
-            break;
-        }
+        lg_game_service_apply_warp(svc, &svc->warps[i]);
         return true;
     }
     return false;
+}
+
+void lg_game_service_apply_warp(LGGameService *svc, const LGWarp *warp) {
+    if (!svc || !svc->player || !warp) return;
+    svc->has_pending_warp = true;
+    svc->pending_warp = warp;
+    svc->player->x = warp->dest_x;
+    svc->player->y = warp->dest_y;
+    for (size_t j = 0; j < svc->map_table_count; ++j) {
+        if (svc->map_table[j].map_id != warp->dest_map) continue;
+        svc->map = svc->map_table[j].map;
+        svc->warps = svc->map_table[j].warps;
+        svc->warp_count = svc->map_table[j].warp_count;
+        break;
+    }
 }
 
 static bool service_item(void *context, uint8_t item_id, uint16_t quantity) {
