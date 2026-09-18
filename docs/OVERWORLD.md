@@ -18,4 +18,17 @@ door/stairs ids yet, and this does not decide when a warp fires (map edge,
 a specific tile, an object event) — that policy, and the real per-map warp
 data, belong to a later, evidence-based step.
 
+## Input-driven movement (`lg/input_control.h`)
+
+Until now the only way to move `LGPlayer` at all was a script's `OP_MOVE`.
+`lg_overworld_input_step(player, map, input)` bridges platform.h's portable
+`LgInputState` to `lg_player_step()`: on a newly pressed direction
+(`input->pressed`, not `held` -- so holding a button doesn't repeat a step
+every single frame with nothing pacing it), it takes exactly one grid
+step, using up/down/left/right priority when more than one direction is
+pressed in the same frame. This is a simple placeholder policy, not
+verified LeafGreen input handling (no turn-then-walk on the first press,
+no running/biking) -- real semantics need ROM evidence, same caveat as
+everywhere else in this module. See `tests/host/test_input_control.c`.
+
 This is preparatory work for LGPSX-012 through LGPSX-018; it is not marked complete until converted real M0 maps render and behave correctly.

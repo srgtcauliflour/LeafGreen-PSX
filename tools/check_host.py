@@ -30,6 +30,7 @@ def main():
                'dialogue': ['src/game/dialogue.c'],
                'window': ['src/game/window.c', 'src/game/dialogue.c'],
                'overworld': ['src/overworld/overworld.c'],
+               'input_control': ['src/overworld/input_control.c', 'src/overworld/overworld.c'],
                'script': ['src/script/vm.c'],
                'service': ['src/game/service.c', 'src/script/vm.c', 'src/overworld/overworld.c'],
                'loop': ['src/game/loop.c', 'src/game/service.c', 'src/game/window.c',

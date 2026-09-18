@@ -186,5 +186,20 @@ corruption. `tests/host/test_save_game.c` covers the round trip and every
 rejection case. Still M0-only (no inventory/party/etc.) and in-memory
 only -- no PS1 memory-card I/O exists yet.
 
+## Input-driven overworld movement (2026-09-18)
+
+Until now the only way to move `LGPlayer` at all was a script's
+`OP_MOVE`; there was no free-roam walking. `include/lg/input_control.h` +
+`src/overworld/input_control.c` add `lg_overworld_input_step(player, map,
+input)`, bridging platform.h's portable `LgInputState` to
+`lg_player_step()`: a newly pressed direction (`pressed`, not `held`, so
+nothing repeats every frame without a timing model) takes exactly one
+grid step, with up/down/left/right priority when multiple directions are
+pressed at once. This is a placeholder input policy, not verified
+LeafGreen behaviour (no turn-then-walk, no running/biking) -- see
+OVERWORLD.md. `tests/host/test_input_control.c` covers pressed vs. held,
+priority, a blocked direction (turns without moving, matching
+`lg_player_step()`'s own contract) and NULL args.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
