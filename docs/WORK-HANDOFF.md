@@ -265,5 +265,27 @@ backend, and PS1/emulator runtime evidence exist -- see the acceptance
 gates in M0-ACCEPTANCE.md and M0-PALLET-TOWN.md, none of which this
 closes on its own.
 
+## Overworld runner (2026-09-18)
+
+`include/lg/runner.h` + `src/game/runner.c` add `LGOverworldRunner`: the
+one function a real per-frame game loop actually calls, since nothing
+until now switched between free-roam input and a running script.
+`lg_overworld_runner_step(runner, input, advance_pressed)` takes free-roam
+movement input while idle, tries an interact first (starting a script on
+a newly pressed A facing a scripted object), then once a script is
+running drives it via `LGGameLoop` each frame until `LG_LOOP_DONE`
+(`LG_RUNNER_STEP_SCRIPT_DONE`, back to idle) or `LG_LOOP_ERROR`
+(`LG_RUNNER_STEP_ERROR`, also back to idle -- one broken script must not
+wedge the whole overworld). The interact check, and the requirement that
+`script_lookup_fn` be non-NULL, is skipped entirely when `event_count` is
+0, so a runner for an event-free map needs no script lookup at all.
+`tests/host/test_runner.c` exercises the full idle -> interact -> script
+-> idle cycle plus an unresolvable script id, a runner with no events,
+and invalid arguments.
+
+This is the actual top-level entry point everything else in this
+session's chain was built to serve; it is still scaffolding for the same
+reasons as everything upstream of it.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

@@ -15,6 +15,7 @@ set(LGPSX_SOURCES
     src/game/service.c
     src/game/loop.c
     src/game/interact.c
+    src/game/runner.c
     src/overworld/overworld.c
     src/overworld/input_control.c
     src/script/vm.c
