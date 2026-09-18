@@ -107,5 +107,46 @@ int main(void) {
     assert(player_y.x == 3 && player_y.y == 3);
     assert(svc_y.map == &map); /* unchanged: no matching table entry */
 
+    /* OP_ITEM blocks the same way as OP_MOVE/OP_WARP once an inventory is
+       registered, actually mutating it (not just recording the request). */
+    LGInventorySlot item_slots[1] = {0};
+    LGInventory inv = {item_slots, 1};
+    LGPlayer player_z = {1, 1, 0, 0};
+    LGGameService svc_z;
+    LGScriptVM vm_z;
+    lg_game_service_init(&svc_z, &player_z, &map, 0, 0);
+    lg_game_service_set_inventory(&svc_z, &inv);
+    const uint8_t item_script[] = {9,6,0x02,0x00, 0}; /* OP_ITEM id=6 qty=2 */
+    lg_script_init(&vm_z, item_script, sizeof item_script);
+    lg_game_service_bind(&svc_z, &vm_z);
+    assert(lg_script_step(&vm_z) == LG_SCRIPT_BLOCKED);
+    assert(svc_z.has_pending_item && svc_z.pending_item_id == 6);
+    assert(svc_z.pending_item_quantity == 2);
+    assert(lg_inventory_count(&inv, 6) == 2);
+    lg_game_service_clear_pending(&svc_z);
+    assert(!svc_z.has_pending_item);
+    lg_script_unblock(&vm_z);
+    assert(lg_script_step(&vm_z) == LG_SCRIPT_DONE);
+
+    /* No inventory registered, or a bag with no room, are both script
+       errors -- OP_ITEM never silently drops the item. */
+    LGGameService svc_no_inv;
+    lg_game_service_init(&svc_no_inv, &player_z, &map, 0, 0);
+    LGScriptVM vm_no_inv;
+    lg_script_init(&vm_no_inv, item_script, sizeof item_script);
+    lg_game_service_bind(&svc_no_inv, &vm_no_inv);
+    assert(lg_script_step(&vm_no_inv) == LG_SCRIPT_ERROR);
+
+    LGInventorySlot full_slots[1] = {{99, 1}}; /* already occupied by a different item */
+    LGInventory full_inv = {full_slots, 1};
+    LGGameService svc_full;
+    lg_game_service_init(&svc_full, &player_z, &map, 0, 0);
+    lg_game_service_set_inventory(&svc_full, &full_inv);
+    LGScriptVM vm_full;
+    lg_script_init(&vm_full, item_script, sizeof item_script);
+    lg_game_service_bind(&svc_full, &vm_full);
+    assert(lg_script_step(&vm_full) == LG_SCRIPT_ERROR);
+    assert(!svc_full.has_pending_item);
+
     return 0;
 }

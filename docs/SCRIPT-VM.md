@@ -55,10 +55,18 @@ id/quantity the service can't apply, e.g. bag full) is a script error. An
 accepting callback blocks the VM the same way as the others: the
 inventory mutation itself is instant, but a real caller very likely
 follows it with its own "got an item!" message/animation, so the caller
-decides when that's done. Unlike `OP_TEXT`/`OP_MOVE`/`OP_WARP`, this has
-no `LGGameService` wiring yet -- there is no inventory model anywhere in
-this codebase. This establishes the VM-side scaffolding the way those
-three did before their own service wiring arrived in later PRs.
+decides when that's done.
+
+`LGGameService` now wires this too, via a generic `LGInventory` bag
+(`lg/inventory.h`): `lg_game_service_set_inventory(svc, inv)` registers
+one, and a resolved `OP_ITEM` calls `lg_inventory_add()` on it, recording
+the outcome in `has_pending_item`/`pending_item_id`/`pending_item_quantity`.
+A missing inventory, or one with no room for a new item, is a script
+error, same as any other unresolvable service call -- OP_ITEM never
+silently discards the item. `LGInventory` is a generic fixed-slot bag
+model, not verified LeafGreen inventory data: real bag pockets, capacity,
+key items and stacking rules all still need ROM evidence. See
+`tests/host/test_service.c` and `tests/host/test_inventory.c`.
 
 ## Flags (`OP_FLAG_SET`, `OP_JUMP_IF_FLAG`)
 

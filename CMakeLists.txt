@@ -12,6 +12,7 @@ set(LGPSX_SOURCES
     src/game/save.c
     src/game/save_game.c
     src/game/resource.c
+    src/game/inventory.c
     src/game/service.c
     src/game/loop.c
     src/game/interact.c

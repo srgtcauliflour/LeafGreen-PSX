@@ -361,5 +361,25 @@ behavior). `tests/host/test_window.c` covers a multi-call reveal
 sequence, including the last glyph and the terminator landing in the
 same call once nothing is left to pause on.
 
+## Inventory + OP_ITEM service wiring (2026-09-18)
+
+`OP_ITEM` (added last session) had no `LGGameService` wiring yet -- there
+was no inventory model anywhere in this codebase. `include/lg/inventory.h`
++ `src/game/inventory.c` add `LGInventory`: a generic fixed-slot bag
+(`lg_inventory_add`/`_remove`/`_count`), not verified LeafGreen inventory
+data -- real bag pockets, capacity, key items and stacking rules all
+still need ROM evidence.
+
+`LGGameService` gained `lg_game_service_set_inventory(svc, inv)` (pass 0
+to leave `OP_ITEM` unsupported, same as any other optional callback) and
+now binds an item callback too: a resolved `OP_ITEM` calls
+`lg_inventory_add()` and records `has_pending_item`/`pending_item_id`/
+`pending_item_quantity`, mirroring how `OP_TEXT`/`OP_WARP` record their
+own pending state. A missing inventory or a full bag is a script error,
+never a silently discarded item. `tests/host/test_inventory.c` covers the
+bag model directly (claiming slots, topping up, clearing on removal,
+overflow, invalid args); `tests/host/test_service.c` covers the
+`OP_ITEM`-through-`LGGameService` wiring and its error paths.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
