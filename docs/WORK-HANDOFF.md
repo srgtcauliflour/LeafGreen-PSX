@@ -227,5 +227,18 @@ call it or run anything. `tests/host/test_overworld.c` covers all four
 facings, a tile with nothing on it, an unrecognised facing value, and
 NULL args.
 
+## Resource byte-span resolution (2026-09-18)
+
+`lg_resource_bytes(index, id, expected_kind, buffer, buffer_size,
+&out_size)` (resource.h/c) resolves an id to a byte span within a
+caller-loaded buffer: `NULL` if not found, the wrong kind, or the entry's
+offset/size doesn't fit entirely within the buffer (never a partial span
+from an overflowing or malformed entry). This is the piece that turns the
+resource index from a lookup table into something a caller can actually
+hand data through -- e.g. `LGGameLoop`'s `LGLoopTextLookupFn` -- once real
+bundle data and CD loading exist. `tests/host/test_resource.c` covers the
+happy path, wrong kind, missing id, an exact-fit boundary, one byte over,
+an offset alone past the buffer, and invalid arguments.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
