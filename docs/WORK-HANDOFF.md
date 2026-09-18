@@ -328,5 +328,22 @@ in a later PR once there's something real to wire it to.
 `tests/host/test_script.c` covers block/unblock, a rejecting callback, a
 missing callback and a truncated operand.
 
+## Movement animation hint (2026-09-18)
+
+`LGPlayer.moving` had sat unused since M0's very first commit.
+`lg_player_step()` now sets it to the new `LG_PLAYER_SLIDE_FRAMES`
+whenever a step actually moves the player (not when it only turns to face
+a blocked direction); the new `lg_player_animate_tick(player)` counts it
+down by one, once per frame, never below 0. This is purely a presentation
+hint for a future renderer to interpolate sprite position during a
+tile-slide -- `x`/`y` already hold the destination the instant the step
+succeeds, and nothing paces or blocks on `moving` being nonzero (adding
+that would conflict with the one-opcode-per-frame pacing scripts already
+rely on, tested across `test_service.c`/`test_loop.c`/`test_runner.c`).
+`LG_PLAYER_SLIDE_FRAMES` is a placeholder duration with no
+ROM/hardware-verified LeafGreen movement timing behind it yet.
+`tests/host/test_overworld.c` covers set-on-move, unset-when-blocked,
+counting down, and never underflowing past 0.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

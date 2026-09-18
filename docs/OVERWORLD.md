@@ -60,4 +60,18 @@ event, or a `script_id` the lookup doesn't know are all
 is not a bug); only invalid arguments are `LG_INTERACT_ERROR`. See
 `tests/host/test_interact.c`.
 
+## Movement animation hint (`LGPlayer.moving`)
+
+`LGPlayer.moving` sat unused since M0's very first commit. `lg_player_step()`
+now sets it to `LG_PLAYER_SLIDE_FRAMES` whenever a step actually moves the
+player (not when it only turns to face a blocked direction);
+`lg_player_animate_tick(player)` counts it down by one, once per frame,
+never below 0. This is purely a presentation hint for a future renderer
+to interpolate sprite position during a tile-slide -- `x`/`y` already hold
+the destination the instant the step succeeds, and neither
+`lg_player_step()` nor any of the input/script paths that call it pace or
+block on `moving` being nonzero. `LG_PLAYER_SLIDE_FRAMES` is a placeholder
+duration with no ROM/hardware-verified LeafGreen movement timing behind
+it yet.
+
 This is preparatory work for LGPSX-012 through LGPSX-018; it is not marked complete until converted real M0 maps render and behave correctly.
