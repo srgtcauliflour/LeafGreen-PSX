@@ -3,6 +3,18 @@
 #include "lg/overworld.h"
 #include "lg/script.h"
 
+/* A destination a warp can switch to: dest_map (see LGWarp.dest_map)
+   matched against map_id, plus that destination map's own cells and warp
+   table. This is a caller-supplied, statically-known table lookup, not
+   resource loading -- there is no CD read here, so it's only as real as
+   whatever maps/warps the caller already has in memory. */
+typedef struct {
+    uint16_t map_id;
+    const LGMap *map;
+    const LGWarp *warps;
+    size_t warp_count;
+} LGMapEntry;
+
 /* Wires LGScriptVM's game-service callbacks (OP_MOVE/OP_TEXT/OP_WARP) to
    the real portable overworld model, so a script can actually move the
    player and request dialogue/warps instead of only exercising the VM in
@@ -22,6 +34,9 @@ typedef struct {
     const LGWarp *warps;
     size_t warp_count;
 
+    const LGMapEntry *map_table; /* optional; 0/0 disables cross-map warps */
+    size_t map_table_count;
+
     bool has_pending_text;
     uint8_t pending_text_id;
 
@@ -31,6 +46,16 @@ typedef struct {
 
 void lg_game_service_init(LGGameService *svc, LGPlayer *player, const LGMap *map,
                            const LGWarp *warps, size_t warp_count);
+/* Registers a table of warp destinations. On a resolved OP_WARP whose
+   LGWarp.dest_map matches an entry, the service switches map/warps to
+   that entry's (in addition to always applying dest_x/dest_y to the
+   player) so a subsequent OP_MOVE/OP_WARP acts against the new map. Pass
+   table=0/count=0 (the lg_game_service_init() default) to leave
+   cross-map warps unresolved -- the player still moves to dest_x/dest_y,
+   but svc->map is unchanged, e.g. while real CD/resource loading for the
+   destination doesn't exist yet. */
+void lg_game_service_set_map_table(LGGameService *svc, const LGMapEntry *table,
+                                    size_t count);
 /* Registers this service's move/text/warp callbacks on vm. The service
    must outlive the VM (or be re-bound after any lg_script_init()), since
    the VM only stores the callback pointers and this context pointer. */

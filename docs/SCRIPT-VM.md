@@ -71,6 +71,17 @@ backend and unblock only once that reports `LG_WINDOW_DONE`, since dialogue
 genuinely spans multiple frames. See `tests/host/test_service.c` for a full
 script run (move, request text, request warp) exercised end to end.
 
+A resolved `OP_WARP` immediately applies the matched `LGWarp`'s
+`dest_x`/`dest_y` to the player. If `lg_game_service_set_map_table(svc,
+table, count)` registered an `LGMapEntry` whose `map_id` matches the
+warp's `dest_map`, it also switches `svc->map`/`svc->warps` to that
+entry's, so the next `OP_MOVE`/`OP_WARP` acts against the destination map
+-- this is a caller-supplied, statically-known table lookup, not resource
+loading, so it's only as real as whatever maps the caller already holds
+in memory. A `dest_map` absent from the table still moves the player but
+leaves the active map alone (e.g. until real CD/resource loading for that
+destination exists).
+
 This wiring is scaffolding, not a finished event system: it has no real M0
 script bytecode, map data or PS1 runtime evidence behind it yet, so it does
 not complete LGPSX-012 through LGPSX-019 on its own.

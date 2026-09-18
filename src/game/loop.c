@@ -54,10 +54,9 @@ LGLoopStatus lg_game_loop_step(LGGameLoop *loop, bool advance_pressed) {
                             loop->sink, loop->sink_context);
             loop->window_active = true;
         } else {
-            if (loop->service->has_pending_warp) {
-                loop->service->player->x = loop->service->pending_warp->dest_x;
-                loop->service->player->y = loop->service->pending_warp->dest_y;
-            }
+            /* OP_MOVE and a resolved OP_WARP (position and, if a map
+               table is registered, the active map/warps) are both
+               already applied synchronously inside LGGameService. */
             lg_game_service_clear_pending(loop->service);
             lg_script_unblock(loop->vm);
         }

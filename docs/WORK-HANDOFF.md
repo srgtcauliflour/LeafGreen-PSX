@@ -201,5 +201,19 @@ OVERWORLD.md. `tests/host/test_input_control.c` covers pressed vs. held,
 priority, a blocked direction (turns without moving, matching
 `lg_player_step()`'s own contract) and NULL args.
 
+## Warp map switching (2026-09-18)
+
+`LGGameService` gained `lg_game_service_set_map_table()` (`LGMapEntry`:
+`map_id`, `map`, `warps`, `warp_count`). A resolved `OP_WARP` already
+applied the matched `LGWarp`'s destination x/y to the player; now, if the
+warp's `dest_map` matches a registered table entry, it also switches
+`svc->map`/`svc->warps` to that entry's, so a subsequent `OP_MOVE`/`OP_WARP`
+acts against the destination map. This is a caller-supplied, statically-
+known table lookup, not resource loading -- a `dest_map` with no table
+entry still moves the player but leaves the map unchanged. `loop.c`
+simplified accordingly (it no longer special-cases warp position, since
+the service already applies it). `tests/host/test_service.c` covers both
+the matched and unmatched cases. See SCRIPT-VM.md.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
