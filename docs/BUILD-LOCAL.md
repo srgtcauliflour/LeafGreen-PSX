@@ -60,6 +60,14 @@ GCC version raised in `inventory.c`, not caught by host `cc`, has been
 fixed). This confirms the CMake target itself is sound, not that the M0
 native-proof/engineering-gate checklist below is met.
 
+`.github/workflows/psx-build.yml` now builds this toolchain and the
+real PS1 target on every push/PR (caching the built toolchain across
+runs, since building it from source takes 30-60 minutes on a cache
+miss), asserting the output really is a `Sony Playstation executable`.
+This guards against a future change silently breaking the PS1 build
+while only `tools/check_host.py`'s host checks (a separate,
+faster-running workflow) are being watched.
+
 ## Runtime gate
 Boot the generated PS-EXE/BIN-CUE and record: whether BIOS->executable succeeds, visible framebuffer output, controller detection, frame stability and any emulator/debug console output. Those observations are the evidence needed to finish LGPSX-010+ rather than guessing at GPU/runtime behaviour.
 

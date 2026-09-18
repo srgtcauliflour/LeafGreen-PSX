@@ -1,0 +1,34 @@
+name: PS1 build
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache mipsel-none-elf/PSn00bSDK toolchain
+        id: toolchain-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/mipsel-none-elf
+            /opt/psn00bsdk
+          key: psn00bsdk-toolchain-${{ runner.os }}-${{ hashFiles('tools/psn00bsdk/setup.sh') }}
+
+      - name: Build toolchain (cache miss only)
+        run: sudo bash tools/psn00bsdk/setup.sh
+
+      - name: Configure and build the real PS1 target
+        run: |
+          export PATH="/opt/mipsel-none-elf/bin:$PATH"
+          export PSN00BSDK_LIBS="/opt/psn00bsdk/lib/libpsn00b"
+          cmake -S . -B build-psx -G Ninja -DCMAKE_TOOLCHAIN_FILE="$PSN00BSDK_LIBS/cmake/sdk.cmake"
+          cmake --build build-psx
+
+      - name: Verify PS-EXE output
+        run: |
+          test -f build-psx/leafgreen_psx.exe
+          test -f build-psx/leafgreen_psx.elf
+          file build-psx/leafgreen_psx.exe | grep -q "Playstation executable"
