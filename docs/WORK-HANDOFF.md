@@ -150,5 +150,28 @@ is still scaffolding: no real M0 script bytecode, converted map data, font
 widths, or PS1 runtime evidence exist behind any of it yet, so LGPSX-012
 through LGPSX-019 remain open until those do.
 
+## Per-frame game loop (2026-09-18)
+
+`include/lg/loop.h` + `src/game/loop.c` add `LGGameLoop`, the piece above
+`LGGameService` that drives a script across real frames instead of one
+opcode call at a time: `lg_game_loop_step(loop, advance_pressed)` steps an
+open `LGWindowState` if one exists, or steps the VM once and resolves
+whatever it blocked on -- `OP_MOVE`/`OP_WARP` immediately (a warp also
+applies the resolved destination x/y to the player, but does not swap the
+active map, since that needs real resource loading this scaffolding
+doesn't have), and `OP_TEXT` by looking up the id's byte span through a
+caller-supplied `LGLoopTextLookupFn` and opening a real window, resolving
+only once it reports `LG_WINDOW_DONE`.
+
+`tests/host/test_loop.c` runs a full multi-frame script end to end (move
+onto a warp tile, open and finish a dialogue window, take the warp, hit
+`OP_END`) against a live map/player and a synthetic font widths/sink/text
+lookup, plus loop-level error cases. This is the closest thing to a
+"working" M0 loop this scaffolding can demonstrate without a PSn00bSDK
+build and real ROM assets: widths/sink/text data are all caller-supplied
+so it stays host-testable, but it is still scaffolding, not a completed
+LGPSX-012 through LGPSX-020 -- those still need real converted map/script
+data, a real font backend, and PS1/emulator runtime evidence.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
