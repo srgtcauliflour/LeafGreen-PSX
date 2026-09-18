@@ -74,3 +74,27 @@ script run (move, request text, request warp) exercised end to end.
 This wiring is scaffolding, not a finished event system: it has no real M0
 script bytecode, map data or PS1 runtime evidence behind it yet, so it does
 not complete LGPSX-012 through LGPSX-019 on its own.
+
+## Per-frame game loop (`lg/loop.h`)
+
+`LGGameLoop` (`src/game/loop.c`) is the piece above `LGGameService` that
+actually drives a script across real frames: `lg_game_loop_step(loop,
+advance_pressed)` steps an active `LGWindowState` when one is open, or
+otherwise steps the VM once and resolves whatever it blocked on --
+`OP_MOVE` and `OP_WARP` immediately (both are synchronous today; a warp
+additionally applies the resolved destination x/y to the player, but does
+NOT swap the active map, since that needs real resource loading this
+scaffolding doesn't have), and `OP_TEXT` by looking up the requested id's
+byte span via a caller-supplied `LGLoopTextLookupFn` and opening a real
+window for it, only resolving once that window reports `LG_WINDOW_DONE`.
+
+`tests/host/test_loop.c` runs a full multi-frame script (move onto a warp
+tile, open and finish a dialogue window, take the warp, end) against a
+live `LGMap`/`LGPlayer`/font-widths-and-sink pair, plus the loop-level
+error cases (an id with no known text, a rejected move, invalid setup).
+Widths/sink/text lookup are all caller-supplied, so this stays fully
+host-testable without PS1 hardware or real font/ROM data -- the same
+inputs would come from the real font backend and a real dialogue-text
+table once those exist. This is the closest this repo gets to a "working"
+M0 loop without a PSn00bSDK build and real ROM assets: it is still
+scaffolding until both of those, and real map/script data, exist.
