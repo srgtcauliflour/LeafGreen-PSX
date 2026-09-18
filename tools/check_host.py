@@ -18,7 +18,7 @@ def run(args, **kwargs):
 def main():
     env = os.environ.copy()
     env['PYTHONDONTWRITEBYTECODE'] = '1'
-    for suite in ('romverify', 'assets', 'gfxconv', 'font'):
+    for suite in ('romverify', 'assets', 'gfxconv', 'font', 'textconv'):
         env['PYTHONPATH'] = str(ROOT / 'tools' / suite)
         run([sys.executable, '-m', 'unittest', 'discover', '-s',
              'tools/' + suite, '-p', 'test_*.py'], env=env)

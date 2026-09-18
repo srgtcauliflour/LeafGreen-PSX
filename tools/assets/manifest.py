@@ -5,7 +5,7 @@ import argparse, json
 from pathlib import Path
 
 REQUIRED={"schema","target","assets"}
-KINDS={"palette","tiles4","tiles8","tilemap","sprite4","sprite8","font","script","map","audio"}
+KINDS={"palette","tiles4","tiles8","tilemap","sprite4","sprite8","font","script","map","audio","text"}
 
 def validate(doc: dict) -> list[str]:
     errors=[]
