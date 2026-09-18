@@ -35,6 +35,15 @@ static bool item_service(void *context, uint8_t id, uint16_t qty) {
     return s->accept;
 }
 
+typedef struct { uint8_t last_id, last_var; unsigned calls; bool accept; } ChoiceService;
+static bool choice_service(void *context, uint8_t id, uint8_t var_index) {
+    ChoiceService *s = context;
+    s->last_id = id;
+    s->last_var = var_index;
+    ++s->calls;
+    return s->accept;
+}
+
 int main(void) {
     const uint8_t code[] = {1,2,5,0,2,2,3,0,3,0};
     const uint8_t wide[] = {1,31,0x34,0x12,2,31,0xff,0xff,0};
@@ -183,6 +192,39 @@ int main(void) {
     lg_script_init(&v, item_take, sizeof item_take);
     lg_script_set_item_fn(&v, item_service, &isvc);
     assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+
+    /* OP_CHOICE blocks the same way, passing a choice-prompt id and a
+       var index (already bounds-checked by the VM) the caller will
+       write the selection into before unblocking. */
+    const uint8_t choice[] = {11,2,5,0}; /* OP_CHOICE id=2 var=5 */
+    ChoiceService csvc = {0, 0, 0, true};
+    lg_script_init(&v, choice, sizeof choice);
+    lg_script_set_choice_fn(&v, choice_service, &csvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED);
+    assert(csvc.last_id == 2 && csvc.last_var == 5 && csvc.calls == 1);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED); /* no-op while blocked */
+    assert(csvc.calls == 1);
+    v.vars[5] = 1; /* the caller writes the selection before unblocking */
+    lg_script_unblock(&v);
+    assert(lg_script_step(&v) == LG_SCRIPT_DONE);
+    assert(v.vars[5] == 1);
+    csvc.accept = false;
+    lg_script_init(&v, choice, sizeof choice);
+    lg_script_set_choice_fn(&v, choice_service, &csvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    lg_script_init(&v, choice, sizeof choice);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR); /* no choice_fn registered */
+    const uint8_t truncated_choice[] = {11,2};
+    lg_script_init(&v, truncated_choice, sizeof truncated_choice);
+    lg_script_set_choice_fn(&v, choice_service, &csvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    const uint8_t bad_choice_var[] = {11,2,32,0}; /* var index 32 is out of range */
+    lg_script_init(&v, bad_choice_var, sizeof bad_choice_var);
+    csvc.accept = true;
+    lg_script_set_choice_fn(&v, choice_service, &csvc);
+    unsigned calls_before = csvc.calls;
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    assert(csvc.calls == calls_before); /* rejected before the callback ran */
 
     /* OP_FLAG_SET sets/clears a bit; OP_JUMP_IF_FLAG jumps only when the
        flag currently equals the operand, and only moves pc -- the target

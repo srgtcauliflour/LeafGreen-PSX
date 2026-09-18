@@ -491,5 +491,27 @@ ROM-verified running speed backs the new constant.
 (including a running ledge jump); `tests/host/test_input_control.c`
 covers the held-B path through `lg_overworld_input_step()`.
 
+## OP_CHOICE opcode + service wiring (2026-09-18)
+
+M0-ACCEPTANCE.md's "New game path" section requires "Oak intro
+progresses through required dialogue/choices", but nothing in the
+script VM could present a choice at all. Added `OP_CHOICE`
+(script.h/vm.c): reads a 1-byte choice-prompt id (portable indirection,
+same idea as `OP_TEXT`'s `text_id`) and a 1-byte var index (bounds-
+checked against the VM's 32 vars before the new `LGScriptChoiceFn`
+callback runs), then blocks like `OP_TEXT` -- the caller drives its own
+menu/window, writes the selected option into `vm->vars[var_index]`
+itself once the player confirms, and only then unblocks. There is no
+"jump if var equals" opcode yet, so branching on the result is left to
+the script/caller for now; this establishes the blocking mechanism, not
+a full menu/branching system.
+
+`LGGameService` wires it the same way as `OP_TEXT`: new
+`has_pending_choice`/`pending_choice_id`/`pending_choice_var` fields
+record the request without deciding when it's resolved.
+`tests/host/test_script.c` covers the opcode/callback (including the
+out-of-range var index being rejected before the callback ever runs);
+`tests/host/test_service.c` covers the `LGGameService` wiring.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

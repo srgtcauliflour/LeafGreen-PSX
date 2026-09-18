@@ -46,6 +46,22 @@ typedef bool (*LGScriptItemFn)(void *context, uint8_t item_id, uint16_t quantity
    same as OP_ITEM. On true, blocks the same way: the mutation itself is
    instant, but the caller likely follows it with its own message/
    animation before calling lg_script_unblock(). */
+/* Called for OP_CHOICE with a portable choice-prompt id (not a LeafGreen
+   text/menu index -- the same indirection idea as OP_TEXT's text_id) and
+   a VM var index (already bounds-checked against the 32 vars, so the
+   callback never sees an out-of-range one). Returns false to reject an
+   id the game service doesn't recognise, which the VM treats as a
+   script error. On true, blocks like OP_TEXT: presenting a Yes/No (or
+   other) prompt and reading the player's selection genuinely spans
+   multiple frames, so the caller drives its own menu/window, writes the
+   selected option directly into vm->vars[var_index] once the player
+   confirms, and only then calls lg_script_unblock() -- a later
+   OP_JUMP_IF_FLAG-style var comparison isn't part of this scaffolding
+   yet, so branching on the result is left to the caller/script author
+   for now. This is the VM-side mechanism M0-ACCEPTANCE.md's "Oak intro
+   progresses through required dialogue/choices" needs, not verified
+   LeafGreen choice/menu data. */
+typedef bool (*LGScriptChoiceFn)(void *context, uint8_t choice_id, uint8_t var_index);
 typedef struct {
     const uint8_t *code; size_t size, pc; uint16_t vars[32];
     uint8_t flags[32]; /* 256 single-bit flags; flags[id/8] bit (id%8) */
@@ -55,6 +71,7 @@ typedef struct {
     LGScriptWarpFn warp_fn; void *warp_context;
     LGScriptItemFn item_fn; void *item_context;
     LGScriptItemFn item_take_fn; void *item_take_context;
+    LGScriptChoiceFn choice_fn; void *choice_context;
 } LGScriptVM;
 void lg_script_init(LGScriptVM *vm,const uint8_t *code,size_t size);
 /* Registers the text/dialogue service callback; pass fn=0 to leave OP_TEXT
@@ -75,6 +92,10 @@ void lg_script_set_item_fn(LGScriptVM *vm, LGScriptItemFn fn, void *context);
    OP_ITEM_TAKE unsupported, for the same reason as the text callback
    above. */
 void lg_script_set_item_take_fn(LGScriptVM *vm, LGScriptItemFn fn, void *context);
+/* Registers the choice/prompt service callback; pass fn=0 to leave
+   OP_CHOICE unsupported, for the same reason as the text callback
+   above. */
+void lg_script_set_choice_fn(LGScriptVM *vm, LGScriptChoiceFn fn, void *context);
 LGScriptStatus lg_script_step(LGScriptVM *vm);
 /* Resolves a pending LG_SCRIPT_BLOCKED wait (e.g. the dialogue/window the
    last OP_TEXT opened has finished). No-op unless the VM is blocked. */
