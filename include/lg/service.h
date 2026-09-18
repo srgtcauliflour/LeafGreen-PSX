@@ -22,21 +22,22 @@ typedef struct {
     size_t event_count;
 } LGMapEntry;
 
-/* Wires LGScriptVM's game-service callbacks (OP_MOVE/OP_TEXT/OP_WARP/OP_ITEM) to
-   the real portable overworld model, so a script can actually move the
-   player and request dialogue/warps/items instead of only exercising the
-   VM in isolation. It stays platform-neutral: no PS1 GPU/controller/CD
-   calls, no font/window rendering (that needs widths/a sink the caller
-   owns).
+/* Wires LGScriptVM's game-service callbacks
+   (OP_MOVE/OP_TEXT/OP_WARP/OP_ITEM/OP_ITEM_TAKE) to the real portable
+   overworld model, so a script can actually move the player and request
+   dialogue/warps/item gain-or-loss instead of only exercising the VM in
+   isolation. It stays platform-neutral: no PS1 GPU/controller/CD calls,
+   no font/window rendering (that needs widths/a sink the caller owns).
 
    Movement, warp and item mutations are resolved synchronously here --
    there is no multi-frame tile slide, async CD warp or item-pickup
    animation yet, so it is correct for a caller to call
-   lg_script_unblock() immediately after a BLOCKED OP_MOVE/OP_WARP/OP_ITEM
-   step returns. OP_TEXT is different: dialogue really does take multiple
-   frames, so this only records the requested id; the caller must drive
-   its own LGWindowState/font backend from pending_text_id and only
-   unblock once that reports LG_WINDOW_DONE. */
+   lg_script_unblock() immediately after a BLOCKED
+   OP_MOVE/OP_WARP/OP_ITEM/OP_ITEM_TAKE step returns. OP_TEXT is
+   different: dialogue really does take multiple frames, so this only
+   records the requested id; the caller must drive its own
+   LGWindowState/font backend from pending_text_id and only unblock once
+   that reports LG_WINDOW_DONE. */
 typedef struct {
     LGPlayer *player;
     const LGMap *map;
@@ -57,6 +58,10 @@ typedef struct {
     bool has_pending_item;
     uint8_t pending_item_id;
     uint16_t pending_item_quantity;
+
+    bool has_pending_item_take;
+    uint8_t pending_item_take_id;
+    uint16_t pending_item_take_quantity;
 } LGGameService;
 
 void lg_game_service_init(LGGameService *svc, LGPlayer *player, const LGMap *map,
@@ -76,13 +81,14 @@ void lg_game_service_set_map_table(LGGameService *svc, const LGMapEntry *table,
    unsupported -- it becomes a script error, the same as any other
    missing service callback, rather than silently discarding the item. */
 void lg_game_service_set_inventory(LGGameService *svc, LGInventory *inv);
-/* Registers this service's move/text/warp callbacks on vm. The service
-   must outlive the VM (or be re-bound after any lg_script_init()), since
-   the VM only stores the callback pointers and this context pointer. */
+/* Registers this service's move/text/warp/item callbacks on vm. The
+   service must outlive the VM (or be re-bound after any
+   lg_script_init()), since the VM only stores the callback pointers and
+   this context pointer. */
 void lg_game_service_bind(LGGameService *svc, LGScriptVM *vm);
-/* Clears has_pending_text/has_pending_warp/has_pending_item; call once
-   the caller has consumed and fully resolved that request (e.g. after
-   unblocking the VM), so a later request isn't confused with a stale
-   one. */
+/* Clears has_pending_text/has_pending_warp/has_pending_item/
+   has_pending_item_take; call once the caller has consumed and fully
+   resolved that request (e.g. after unblocking the VM), so a later
+   request isn't confused with a stale one. */
 void lg_game_service_clear_pending(LGGameService *svc);
 #endif

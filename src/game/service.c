@@ -45,6 +45,15 @@ static bool service_item(void *context, uint8_t item_id, uint16_t quantity) {
     return true;
 }
 
+static bool service_item_take(void *context, uint8_t item_id, uint16_t quantity) {
+    LGGameService *svc = context;
+    if (!svc->inventory || !lg_inventory_remove(svc->inventory, item_id, quantity)) return false;
+    svc->has_pending_item_take = true;
+    svc->pending_item_take_id = item_id;
+    svc->pending_item_take_quantity = quantity;
+    return true;
+}
+
 void lg_game_service_init(LGGameService *svc, LGPlayer *player, const LGMap *map,
                            const LGWarp *warps, size_t warp_count) {
     if (!svc) return;
@@ -62,6 +71,9 @@ void lg_game_service_init(LGGameService *svc, LGPlayer *player, const LGMap *map
     svc->has_pending_item = false;
     svc->pending_item_id = 0;
     svc->pending_item_quantity = 0;
+    svc->has_pending_item_take = false;
+    svc->pending_item_take_id = 0;
+    svc->pending_item_take_quantity = 0;
 }
 
 void lg_game_service_set_map_table(LGGameService *svc, const LGMapEntry *table,
@@ -82,6 +94,7 @@ void lg_game_service_bind(LGGameService *svc, LGScriptVM *vm) {
     lg_script_set_text_fn(vm, service_text, svc);
     lg_script_set_warp_fn(vm, service_warp, svc);
     lg_script_set_item_fn(vm, service_item, svc);
+    lg_script_set_item_take_fn(vm, service_item_take, svc);
 }
 
 void lg_game_service_clear_pending(LGGameService *svc) {
@@ -90,4 +103,5 @@ void lg_game_service_clear_pending(LGGameService *svc) {
     svc->has_pending_warp = false;
     svc->pending_warp = 0;
     svc->has_pending_item = false;
+    svc->has_pending_item_take = false;
 }

@@ -400,5 +400,26 @@ shaped exactly like its own schema. `tests/host/test_save_game.c` covers
 the inventory round-trip and the mismatched-slot-count no-op case
 alongside the existing player/flags/corruption coverage.
 
+## OP_ITEM_TAKE opcode + service wiring (2026-09-18)
+
+`lg/inventory.h` already had `lg_inventory_remove()`, but nothing in the
+script VM or `LGGameService` called it -- `OP_ITEM` (and its service
+wiring) only ever added items. Added `OP_ITEM_TAKE`: same 1-byte item id
++ 16-bit little-endian quantity operand shape as `OP_ITEM`, but resolved
+through a separate `LGScriptVM.item_take_fn`/`item_take_context` pair
+(registered via `lg_script_set_item_take_fn`), so a script can consume a
+key item, pay an item cost, or complete a trade, not just receive items.
+
+`LGGameService` wires it the same way `OP_ITEM` is wired: a resolved
+`OP_ITEM_TAKE` calls `lg_inventory_remove()`, recording the outcome in
+new `has_pending_item_take`/`pending_item_take_id`/
+`pending_item_take_quantity` fields (kept separate from `OP_ITEM`'s own
+pending fields so a pending grant and a pending removal never collide).
+A missing inventory or removing more than the bag holds is a script
+error, same as any other unresolvable service call.
+`tests/host/test_script.c` covers the new opcode/callback at the VM
+level; `tests/host/test_service.c` covers the `LGGameService` wiring and
+its error paths.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

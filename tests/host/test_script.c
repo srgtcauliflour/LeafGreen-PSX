@@ -157,6 +157,33 @@ int main(void) {
     lg_script_set_item_fn(&v, item_service, &isvc);
     assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
 
+    /* OP_ITEM_TAKE blocks the same way, using a separate callback/context
+       from OP_ITEM even though the signature matches. */
+    const uint8_t item_take[] = {10,4,0x34,0x12,0}; /* item 4, qty 0x1234 */
+    ItemService tsvc = {0, 0, 0, true};
+    lg_script_init(&v, item_take, sizeof item_take);
+    lg_script_set_item_take_fn(&v, item_service, &tsvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED);
+    assert(tsvc.last_id == 4 && tsvc.last_qty == 0x1234 && tsvc.calls == 1);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED); /* no-op while blocked */
+    assert(tsvc.calls == 1);
+    lg_script_unblock(&v);
+    assert(lg_script_step(&v) == LG_SCRIPT_DONE);
+    tsvc.accept = false;
+    lg_script_init(&v, item_take, sizeof item_take);
+    lg_script_set_item_take_fn(&v, item_service, &tsvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    lg_script_init(&v, item_take, sizeof item_take);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR); /* no item_take_fn registered */
+    const uint8_t truncated_item_take[] = {10,4,0};
+    lg_script_init(&v, truncated_item_take, sizeof truncated_item_take);
+    lg_script_set_item_take_fn(&v, item_service, &tsvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    /* Registering item_fn alone does not satisfy OP_ITEM_TAKE. */
+    lg_script_init(&v, item_take, sizeof item_take);
+    lg_script_set_item_fn(&v, item_service, &isvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+
     /* OP_FLAG_SET sets/clears a bit; OP_JUMP_IF_FLAG jumps only when the
        flag currently equals the operand, and only moves pc -- the target
        instruction executes on the following step, not the same one. */

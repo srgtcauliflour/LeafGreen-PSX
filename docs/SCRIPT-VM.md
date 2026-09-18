@@ -68,6 +68,26 @@ model, not verified LeafGreen inventory data: real bag pockets, capacity,
 key items and stacking rules all still need ROM evidence. See
 `tests/host/test_service.c` and `tests/host/test_inventory.c`.
 
+## Item-removal service callback (`OP_ITEM_TAKE`)
+
+`lg_script_set_item_take_fn(vm, fn, context)` registers `LGScriptItemFn`
+(the same signature `OP_ITEM` uses) against a separate `item_take_fn`/
+`item_take_context` slot on the VM. `OP_ITEM_TAKE` reads the identical
+1-byte item id + 16-bit little-endian quantity operands as `OP_ITEM`, but
+calls this other callback -- for a script consuming a key item, paying an
+item cost, or completing a trade, rather than granting one. A missing or
+rejecting callback (an id/quantity the service can't remove, e.g. the bag
+doesn't hold that many) is a script error; an accepting callback blocks
+the VM exactly like `OP_ITEM` does.
+
+`LGGameService` wires this the same way as `OP_ITEM`: a resolved
+`OP_ITEM_TAKE` calls `lg_inventory_remove()` on the registered
+`LGInventory`, recording the outcome in `has_pending_item_take`/
+`pending_item_take_id`/`pending_item_take_quantity` (a separate set of
+fields from `OP_ITEM`'s, so a pending grant and a pending removal are
+never confused with each other). See `tests/host/test_script.c` and
+`tests/host/test_service.c` for the VM-level and service-level coverage.
+
 ## Flags (`OP_FLAG_SET`, `OP_JUMP_IF_FLAG`)
 
 `LGScriptVM` carries 256 single-bit flags (`flags[32]`), separate from the

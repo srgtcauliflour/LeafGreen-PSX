@@ -37,6 +37,15 @@ typedef bool (*LGScriptWarpFn)(void *context, uint8_t warp_id);
    scaffolding SCRIPT-VM.md called for, matching OP_TEXT/OP_MOVE/OP_WARP's
    own history of VM opcode first, LGGameService wiring later. */
 typedef bool (*LGScriptItemFn)(void *context, uint8_t item_id, uint16_t quantity);
+/* Called for OP_ITEM_TAKE with the same operand shape as OP_ITEM (a
+   portable item id and a 16-bit quantity), but for removing items instead
+   of adding them -- e.g. a script that consumes a key item, pays an item
+   cost, or triggers a trade. Returns false to reject an id the game
+   service doesn't recognise or a quantity it can't remove (e.g. the bag
+   doesn't have that many), which the VM treats as a script error, the
+   same as OP_ITEM. On true, blocks the same way: the mutation itself is
+   instant, but the caller likely follows it with its own message/
+   animation before calling lg_script_unblock(). */
 typedef struct {
     const uint8_t *code; size_t size, pc; uint16_t vars[32];
     uint8_t flags[32]; /* 256 single-bit flags; flags[id/8] bit (id%8) */
@@ -45,6 +54,7 @@ typedef struct {
     LGScriptMoveFn move_fn; void *move_context;
     LGScriptWarpFn warp_fn; void *warp_context;
     LGScriptItemFn item_fn; void *item_context;
+    LGScriptItemFn item_take_fn; void *item_take_context;
 } LGScriptVM;
 void lg_script_init(LGScriptVM *vm,const uint8_t *code,size_t size);
 /* Registers the text/dialogue service callback; pass fn=0 to leave OP_TEXT
@@ -61,6 +71,10 @@ void lg_script_set_warp_fn(LGScriptVM *vm, LGScriptWarpFn fn, void *context);
 /* Registers the item service callback; pass fn=0 to leave OP_ITEM
    unsupported, for the same reason as the text callback above. */
 void lg_script_set_item_fn(LGScriptVM *vm, LGScriptItemFn fn, void *context);
+/* Registers the item-removal service callback; pass fn=0 to leave
+   OP_ITEM_TAKE unsupported, for the same reason as the text callback
+   above. */
+void lg_script_set_item_take_fn(LGScriptVM *vm, LGScriptItemFn fn, void *context);
 LGScriptStatus lg_script_step(LGScriptVM *vm);
 /* Resolves a pending LG_SCRIPT_BLOCKED wait (e.g. the dialogue/window the
    last OP_TEXT opened has finished). No-op unless the VM is blocked. */
