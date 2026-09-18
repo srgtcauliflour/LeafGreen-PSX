@@ -17,6 +17,15 @@ buffer, wrong magic/version, a payload_size that doesn't match
 out. See `tests/host/test_save_game.c` for the round-trip and every
 rejection case.
 
+`lg_save_game_capture(player, vm, out)`/`lg_save_game_apply(payload,
+player, vm)` connect the payload to the live `LGPlayer`/`LGScriptVM`
+structs directly, rather than leaving the caller to copy fields by hand:
+capture fills a payload from a player's x/y/facing and a VM's 256 flags;
+apply writes them back. Apply only touches x/y/facing/flags -- it never
+resets `vm->pc`/`status`/`code`, since resuming mid-script from a save
+isn't part of this schema. Both are no-ops (never a partial
+read/write) if any argument is NULL.
+
 This is still only the M0 slice: inventory, party and other LeafGreen
 save state aren't ported yet, so `LGSaveGamePayload` will grow (bumping
 `LG_SAVE_VERSION`) as they are. No PS1 memory-card I/O exists yet either

@@ -54,5 +54,45 @@ int main(void) {
     assert(lg_save_game_read(0, sizeof buffer, &round_trip, 0) == 0);
     assert(lg_save_game_read(buffer, written, 0, 0) == 0);
 
+    /* Capture/apply round-trip real LGPlayer/LGScriptVM state, not just a
+       hand-filled payload struct. */
+    LGPlayer player = {7, -3, 1, 0};
+    LGScriptVM vm;
+    const uint8_t flag_script[] = {7, 40, 1, 0}; /* OP_FLAG_SET 40=1, OP_END */
+    lg_script_init(&vm, flag_script, sizeof flag_script);
+    assert(lg_script_step(&vm) == LG_SCRIPT_RUNNING);
+
+    LGSaveGamePayload captured;
+    memset(&captured, 0xff, sizeof captured); /* poison before capture */
+    lg_save_game_capture(&player, &vm, &captured);
+    assert(captured.player_x == 7 && captured.player_y == -3 && captured.player_facing == 1);
+    assert((captured.flags[40 / 8] >> (40 % 8)) & 1);
+
+    uint8_t save_buffer[sizeof(LGSaveHeader) + sizeof(LGSaveGamePayload)];
+    size_t save_written = lg_save_game_write(&captured, 99, save_buffer, sizeof save_buffer);
+    assert(save_written == sizeof save_buffer);
+
+    LGPlayer restored_player = {0, 0, 0, 0};
+    LGScriptVM restored_vm;
+    lg_script_init(&restored_vm, flag_script, sizeof flag_script); /* flags start clear */
+    LGSaveGamePayload loaded;
+    assert(lg_save_game_read(save_buffer, save_written, &loaded, 0) == 1);
+    lg_save_game_apply(&loaded, &restored_player, &restored_vm);
+    assert(restored_player.x == 7 && restored_player.y == -3 && restored_player.facing == 1);
+    assert((restored_vm.flags[40 / 8] >> (40 % 8)) & 1);
+    /* Only x/y/facing/flags are touched -- execution state is untouched. */
+    assert(restored_vm.status == LG_SCRIPT_RUNNING);
+
+    /* Invalid arguments are no-ops, not partial writes. */
+    LGSaveGamePayload untouched;
+    memset(&untouched, 0x42, sizeof untouched);
+    lg_save_game_capture(0, &vm, &untouched);
+    lg_save_game_capture(&player, 0, &untouched);
+    assert(untouched.player_x == (int16_t)0x4242);
+    LGPlayer unchanged_player = {1, 2, 3, 0};
+    lg_save_game_apply(&loaded, 0, &restored_vm);
+    lg_save_game_apply(0, &unchanged_player, &restored_vm);
+    assert(unchanged_player.x == 1 && unchanged_player.y == 2 && unchanged_player.facing == 3);
+
     return 0;
 }
