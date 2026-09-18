@@ -36,6 +36,7 @@ def main():
                         'src/game/dialogue.c', 'src/script/vm.c', 'src/overworld/overworld.c'],
                'trade_record': ['src/game/trade_record.c'],
                'save': ['src/game/save.c'],
+               'save_game': ['src/game/save_game.c', 'src/game/save.c'],
                'resource': ['src/game/resource.c']}
     all_sources = sorted({source for sources in modules.values() for source in sources})
     with tempfile.TemporaryDirectory(prefix='lgpsx-host-') as temp:
