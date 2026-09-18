@@ -513,5 +513,19 @@ record the request without deciding when it's resolved.
 out-of-range var index being rejected before the callback ever runs);
 `tests/host/test_service.c` covers the `LGGameService` wiring.
 
+## OP_JUMP_IF_VAR opcode (2026-09-18)
+
+`OP_CHOICE`'s own docs (last cycle) noted there was no way yet for a
+script to branch on the selected option it writes into a var. Added
+`OP_JUMP_IF_VAR` (index, 16-bit little-endian value, little-endian
+absolute address): the same idea as the existing `OP_JUMP_IF_FLAG`, but
+compares a full `vars[index]` value instead of a single flag bit. Same
+rules apply -- the var index and jump target are both bounds-checked up
+front regardless of whether the branch is taken, and a jump only moves
+`pc` (the target instruction executes on the following step).
+`tests/host/test_script.c` covers the taken/not-taken cases and all
+three error paths (bad var index, bad jump target, truncated operand),
+mirroring the existing `OP_JUMP_IF_FLAG` coverage.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
