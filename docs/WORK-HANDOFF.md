@@ -607,5 +607,22 @@ with this repo's redistribution boundary. Finding and verifying real
 map/dialogue/font offsets against the ROM is deferred to future,
 non-public work (see the ROM note above).
 
+## CI now builds the real PS1 target (2026-09-18)
+
+The first real PS1 build (previous entry) was only proven manually in
+one session -- CI still only ran `tools/check_host.py`, so nothing
+would catch a future change silently breaking the actual
+`leafgreen_psx` CMake target. Added `.github/workflows/psx-build.yml`:
+builds the `mipsel-none-elf`/PSn00bSDK toolchain via
+`tools/psn00bsdk/setup.sh` (caching `/opt/mipsel-none-elf` and
+`/opt/psn00bsdk` across runs, keyed on the setup script's contents,
+since a from-source build takes 30-60 minutes on a cache miss),
+configures and builds the real target, then asserts
+`build-psx/leafgreen_psx.exe` is genuinely a `Sony Playstation
+executable` (via `file`), not just that some file exists. Runs
+alongside the existing `host-tools.yml` workflow as a separate job, so
+a PS1-specific compile/link failure is now caught automatically on
+every push/PR, the same as host-only regressions already were.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

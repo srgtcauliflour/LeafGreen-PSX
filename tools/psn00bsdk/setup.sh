@@ -25,6 +25,40 @@ PROFILE_SCRIPT="/etc/profile.d/psn00bsdk.sh"
 
 log() { echo "[psn00bsdk-setup] $*"; }
 
+# ftpmirror.gnu.org (and similar mirror-redirect services) occasionally
+# hands back a transient error (wget exit 8) on the very first request --
+# retry with backoff instead of failing the whole build on one flaky
+# redirect. Downloads to a .partial path first so a failed/interrupted
+# attempt never leaves a corrupt file at the final name.
+download_with_retry() {
+    local url="$1" out="$2" attempt
+    if [ -f "$out" ]; then return 0; fi
+    for attempt in 1 2 3 4 5; do
+        if wget -q --tries=3 --timeout=30 -O "${out}.partial" "$url"; then
+            mv "${out}.partial" "$out"
+            return 0
+        fi
+        rm -f "${out}.partial"
+        log "download attempt ${attempt}/5 failed for ${url}, retrying in $((attempt * 5))s..."
+        sleep $((attempt * 5))
+    done
+    log "FATAL: failed to download ${url} after 5 attempts"
+    return 1
+}
+
+# Same idea for a command that does its own downloading internally (GCC's
+# contrib/download_prerequisites fetches gmp/mpfr/mpc/isl) and can't be
+# retried file-by-file.
+retry_command() {
+    local attempt
+    for attempt in 1 2 3; do
+        if "$@"; then return 0; fi
+        log "command failed (attempt ${attempt}/3): $*"
+        sleep $((attempt * 5))
+    done
+    return 1
+}
+
 export PATH="$TOOLCHAIN_PREFIX/bin:$PATH"
 
 # --- Stage 1: host build prerequisites -------------------------------------
@@ -44,9 +78,9 @@ else
     log "Building binutils ${BINUTILS_VERSION} for mipsel-none-elf..."
     mkdir -p "$BUILD_ROOT"
     cd "$BUILD_ROOT"
-    if [ ! -f "binutils-${BINUTILS_VERSION}.tar.xz" ]; then
-        wget -q "https://ftpmirror.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.xz"
-    fi
+    download_with_retry \
+        "https://ftpmirror.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.xz" \
+        "binutils-${BINUTILS_VERSION}.tar.xz"
     [ -d "binutils-${BINUTILS_VERSION}" ] || tar xf "binutils-${BINUTILS_VERSION}.tar.xz"
     rm -rf binutils-build
     mkdir binutils-build
@@ -64,12 +98,12 @@ if command -v "${TOOLCHAIN_PREFIX}/bin/mipsel-none-elf-gcc" >/dev/null 2>&1; the
 else
     log "Building GCC ${GCC_VERSION} for mipsel-none-elf (this takes a while)..."
     cd "$BUILD_ROOT"
-    if [ ! -f "gcc-${GCC_VERSION}.tar.xz" ]; then
-        wget -q "https://ftpmirror.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz"
-    fi
+    download_with_retry \
+        "https://ftpmirror.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz" \
+        "gcc-${GCC_VERSION}.tar.xz"
     [ -d "gcc-${GCC_VERSION}" ] || tar xf "gcc-${GCC_VERSION}.tar.xz"
     cd "gcc-${GCC_VERSION}"
-    ./contrib/download_prerequisites
+    retry_command ./contrib/download_prerequisites
     cd "$BUILD_ROOT"
     rm -rf gcc-build
     mkdir gcc-build
@@ -91,7 +125,7 @@ if [ -f "${PSN00BSDK_PREFIX}/lib/libpsn00b/cmake/sdk.cmake" ]; then
 else
     log "Building PSn00bSDK..."
     if [ ! -d "$PSN00BSDK_SRC/.git" ]; then
-        git clone --recurse-submodules --depth 1 \
+        retry_command git clone --recurse-submodules --depth 1 \
             https://github.com/Lameguy64/PSn00bSDK.git "$PSN00BSDK_SRC"
     fi
     cd "$PSN00BSDK_SRC"
