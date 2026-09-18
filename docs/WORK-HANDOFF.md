@@ -287,5 +287,17 @@ This is the actual top-level entry point everything else in this
 session's chain was built to serve; it is still scaffolding for the same
 reasons as everything upstream of it.
 
+## Save capture/apply (2026-09-18)
+
+`lg_save_game_capture(player, vm, out)` / `lg_save_game_apply(payload,
+player, vm)` (save_game.h/c) connect `LGSaveGamePayload` to the live
+`LGPlayer`/`LGScriptVM` structs directly: capture fills a payload from a
+player's x/y/facing and a VM's 256 flags, apply writes them back. Apply
+only touches x/y/facing/flags, never `vm->pc`/`status`/`code` (resuming
+mid-script from a save isn't part of this schema). Both are no-ops on any
+NULL argument, never a partial copy. `tests/host/test_save_game.c` now
+round-trips real player/VM state (via a script that sets a flag) through
+capture -> write -> read -> apply, and checks every NULL-argument no-op.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

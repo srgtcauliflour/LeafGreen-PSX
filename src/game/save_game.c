@@ -36,3 +36,21 @@ int lg_save_game_read(const uint8_t *data, size_t size,
     if (out_save_id) *out_save_id = header.save_id;
     return 1;
 }
+
+void lg_save_game_capture(const LGPlayer *player, const LGScriptVM *vm,
+                           LGSaveGamePayload *out) {
+    if (!player || !vm || !out) return;
+    out->player_x = player->x;
+    out->player_y = player->y;
+    out->player_facing = player->facing;
+    memcpy(out->flags, vm->flags, sizeof out->flags);
+}
+
+void lg_save_game_apply(const LGSaveGamePayload *payload, LGPlayer *player,
+                         LGScriptVM *vm) {
+    if (!payload || !player || !vm) return;
+    player->x = payload->player_x;
+    player->y = payload->player_y;
+    player->facing = payload->player_facing;
+    memcpy(vm->flags, payload->flags, sizeof vm->flags);
+}

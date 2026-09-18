@@ -1,6 +1,8 @@
 #ifndef LG_SAVE_GAME_H
 #define LG_SAVE_GAME_H
+#include "lg/overworld.h"
 #include "lg/save.h"
+#include "lg/script.h"
 #include <stdint.h>
 
 /* M0 gameplay save payload: player position/facing plus the 256 script
@@ -27,4 +29,16 @@ size_t lg_save_game_write(const LGSaveGamePayload *payload, uint64_t save_id,
    payload_size that doesn't match sizeof(LGSaveGamePayload)). */
 int lg_save_game_read(const uint8_t *data, size_t size,
                        LGSaveGamePayload *out_payload, uint64_t *out_save_id);
+/* Fills out from the live player/vm state (player x/y/facing, vm's 256
+   flags). No-op if any argument is NULL -- this never partially fills
+   out. */
+void lg_save_game_capture(const LGPlayer *player, const LGScriptVM *vm,
+                           LGSaveGamePayload *out);
+/* The inverse: writes payload's fields back onto player/vm. No-op if any
+   argument is NULL. This only touches x/y/facing/flags -- it does not
+   reset vm->pc/status/code or anything else about the VM's execution
+   state, since resuming mid-script from a save isn't part of this
+   schema yet (see LGSaveGamePayload's own doc comment). */
+void lg_save_game_apply(const LGSaveGamePayload *payload, LGPlayer *player,
+                         LGScriptVM *vm);
 #endif
