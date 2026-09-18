@@ -123,5 +123,14 @@ system needs to drive `LGWindowState`-based dialogue from a script, not a
 mapping of real LeafGreen bytecode (`text_id` is our own indirection). See
 SCRIPT-VM.md.
 
+`LGScriptVM` also gained `OP_MOVE`/`lg_script_set_move_fn()`: same
+blocking pattern as `OP_TEXT`, but for a single grid step, validated
+against the same dx/dy shape `lg_player_step()` accepts. Neither of these
+opcodes is wired to the real overworld/window modules yet -- that
+integration (a game loop registering callbacks that actually call
+`lg_player_step()`/`LGWindowState`) is still open, and still needs real
+M0 map/script data and PS1 runtime evidence before any of LGPSX-012
+through LGPSX-019 can be marked complete.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.

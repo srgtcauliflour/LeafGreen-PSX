@@ -9,6 +9,15 @@ static bool accept_under_9(void *context, uint8_t id) {
     return id < 9;
 }
 
+typedef struct { int8_t last_dx, last_dy; unsigned calls; bool accept; } MoveService;
+static bool move_service(void *context, int8_t dx, int8_t dy) {
+    MoveService *s = context;
+    s->last_dx = dx;
+    s->last_dy = dy;
+    ++s->calls;
+    return s->accept;
+}
+
 int main(void) {
     const uint8_t code[] = {1,2,5,0,2,2,3,0,3,0};
     const uint8_t wide[] = {1,31,0x34,0x12,2,31,0xff,0xff,0};
@@ -57,6 +66,36 @@ int main(void) {
     assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
     lg_script_init(&v, text, sizeof text);
     assert(lg_script_step(&v) == LG_SCRIPT_ERROR); /* no text_fn registered */
+
+    /* OP_MOVE blocks the same way, using the same dx/dy shape as
+       lg_player_step(): each in {-1,0,1}, never both nonzero. */
+    const uint8_t move[] = {5,(uint8_t)-1,0,0};
+    MoveService msvc = {0, 0, 0, true};
+    lg_script_init(&v, move, sizeof move);
+    lg_script_set_move_fn(&v, move_service, &msvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED);
+    assert(msvc.last_dx == -1 && msvc.last_dy == 0 && msvc.calls == 1);
+    assert(lg_script_step(&v) == LG_SCRIPT_BLOCKED); /* no-op while blocked */
+    assert(msvc.calls == 1);
+    lg_script_unblock(&v);
+    assert(lg_script_step(&v) == LG_SCRIPT_DONE);
+
+    /* A rejecting callback, a missing callback, an invalid dx/dy shape and
+       a truncated operand are all errors. */
+    msvc.accept = false;
+    lg_script_init(&v, move, sizeof move);
+    lg_script_set_move_fn(&v, move_service, &msvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    lg_script_init(&v, move, sizeof move);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR); /* no move_fn registered */
+    const uint8_t diagonal[] = {5,1,1};
+    lg_script_init(&v, diagonal, sizeof diagonal);
+    lg_script_set_move_fn(&v, move_service, &msvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    const uint8_t truncated_move[] = {5,1};
+    lg_script_init(&v, truncated_move, sizeof truncated_move);
+    lg_script_set_move_fn(&v, move_service, &msvc);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
 
     /* Unblocking anything but a blocked VM is a no-op. */
     lg_script_init(&v, code, sizeof code);
