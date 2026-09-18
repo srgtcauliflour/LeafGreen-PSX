@@ -39,7 +39,7 @@ int main(void) {
     Seen seen = {0};
     LGGameLoop loop;
     lg_game_loop_init(&loop, &vm, &svc, widths, capture, &seen, lookup_text, 0,
-                       10, 20, 0, 0);
+                       10, 20, 0, 0, 0);
 
     /* Frame 1: OP_MOVE resolves synchronously; player moves onto the warp tile. */
     assert(lg_game_loop_step(&loop, false) == LG_LOOP_RUNNING);
@@ -77,7 +77,7 @@ int main(void) {
     lg_game_service_bind(&svc2, &vm2);
     LGGameLoop loop2;
     lg_game_loop_init(&loop2, &vm2, &svc2, widths, capture, &seen, lookup_text, 0,
-                       10, 20, 0, 0);
+                       10, 20, 0, 0, 0);
     assert(lg_game_loop_step(&loop2, false) == LG_LOOP_ERROR);
 
     /* A rejected move is a script error surfaced as a loop error too. */
@@ -93,13 +93,13 @@ int main(void) {
     lg_game_service_bind(&svc3, &vm3);
     LGGameLoop loop3;
     lg_game_loop_init(&loop3, &vm3, &svc3, widths, capture, &seen, lookup_text, 0,
-                       10, 20, 0, 0);
+                       10, 20, 0, 0, 0);
     assert(lg_game_loop_step(&loop3, false) == LG_LOOP_ERROR);
 
     /* Invalid setup is rejected. */
     LGGameLoop bad_loop;
     lg_game_loop_init(&bad_loop, 0, 0, widths, capture, &seen, lookup_text, 0,
-                       0, 0, 0, 0);
+                       0, 0, 0, 0, 0);
     assert(lg_game_loop_step(&bad_loop, false) == LG_LOOP_ERROR);
     assert(lg_game_loop_step(0, false) == LG_LOOP_ERROR);
 

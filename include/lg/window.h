@@ -23,21 +23,33 @@ typedef struct {
     int last_y;
     bool have_last_y;
     bool awaiting_scroll;
+    int reveal_per_step;    /* 0 disables the typewriter pacing below */
+    int revealed_this_call; /* glyphs drawn so far during the current lg_window_step() */
+    bool paused_for_reveal;
     LGGlyphSink sink;
     void *sink_context;
 } LGWindowState;
 
 /* wrap_width has the same character-wrapping meaning as in LGDialogueState.
    max_lines bounds how many lines are drawn before pausing for a scroll.
-   Pass 0 to either to disable that bound. */
+   reveal_per_step bounds how many glyphs a single lg_window_step() call
+   draws before pausing until the next call (a typewriter reveal effect);
+   the pacing itself -- how many frames per glyph -- is entirely the
+   caller's: call lg_window_step() less often, or with a larger
+   reveal_per_step, to reveal faster. Pass 0 to any of these three to
+   disable that bound. */
 void lg_window_init(LGWindowState *w, const uint8_t *text, size_t size,
                      const uint8_t widths[256], int x, int y, int wrap_width,
-                     int max_lines, LGGlyphSink sink, void *sink_context);
+                     int max_lines, int reveal_per_step,
+                     LGGlyphSink sink, void *sink_context);
 /* Advances layout by one call. On a control byte, reports
    LG_WINDOW_AWAIT_ADVANCE on every call until advance_pressed is true, at
    which point it consumes the control byte and continues in the same call.
    On hitting the max_lines bound, reports LG_WINDOW_AWAIT_SCROLL the same
    way, then on advance_pressed resets to the box's first line and
-   continues in the same call. */
+   continues in the same call. On hitting the reveal_per_step bound,
+   reports LG_WINDOW_RUNNING (there is nothing for the caller to
+   acknowledge, unlike the other two) and continues drawing on the next
+   call from the glyph it paused at. */
 LGWindowStatus lg_window_step(LGWindowState *w, bool advance_pressed);
 #endif

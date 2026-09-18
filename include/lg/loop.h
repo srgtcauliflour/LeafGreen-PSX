@@ -37,15 +37,21 @@ typedef struct {
     void *sink_context;
     LGLoopTextLookupFn text_lookup_fn;
     void *text_lookup_context;
-    int text_x, text_y, text_wrap_width, text_max_lines;
+    int text_x, text_y, text_wrap_width, text_max_lines, text_reveal_per_step;
     LGWindowState window;
     bool window_active;
 } LGGameLoop;
 
+/* text_reveal_per_step is forwarded to lg_window_init()'s reveal_per_step
+   (see window.h) for every window a script's OP_TEXT opens: 0 reveals a
+   line as fast as wrap/scroll allow (the prior behavior), a positive
+   value paces it to that many glyphs per lg_game_loop_step() call, i.e.
+   per real frame -- a typewriter effect. */
 void lg_game_loop_init(LGGameLoop *loop, LGScriptVM *vm, LGGameService *service,
                         const uint8_t widths[256], LGGlyphSink sink, void *sink_context,
                         LGLoopTextLookupFn text_lookup_fn, void *text_lookup_context,
-                        int text_x, int text_y, int text_wrap_width, int text_max_lines);
+                        int text_x, int text_y, int text_wrap_width, int text_max_lines,
+                        int text_reveal_per_step);
 /* Advances by one frame: drives an already-open dialogue window with
    advance_pressed, or steps the script VM otherwise, auto-resolving
    OP_MOVE/OP_WARP and opening a window for OP_TEXT as described above. */

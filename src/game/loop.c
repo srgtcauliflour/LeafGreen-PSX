@@ -3,7 +3,8 @@
 void lg_game_loop_init(LGGameLoop *loop, LGScriptVM *vm, LGGameService *service,
                         const uint8_t widths[256], LGGlyphSink sink, void *sink_context,
                         LGLoopTextLookupFn text_lookup_fn, void *text_lookup_context,
-                        int text_x, int text_y, int text_wrap_width, int text_max_lines) {
+                        int text_x, int text_y, int text_wrap_width, int text_max_lines,
+                        int text_reveal_per_step) {
     if (!loop) return;
     loop->vm = vm;
     loop->service = service;
@@ -16,6 +17,7 @@ void lg_game_loop_init(LGGameLoop *loop, LGScriptVM *vm, LGGameService *service,
     loop->text_y = text_y;
     loop->text_wrap_width = text_wrap_width;
     loop->text_max_lines = text_max_lines;
+    loop->text_reveal_per_step = text_reveal_per_step;
     loop->window_active = false;
 }
 
@@ -51,7 +53,7 @@ LGLoopStatus lg_game_loop_step(LGGameLoop *loop, bool advance_pressed) {
             }
             lg_window_init(&loop->window, text, size, loop->widths, loop->text_x,
                             loop->text_y, loop->text_wrap_width, loop->text_max_lines,
-                            loop->sink, loop->sink_context);
+                            loop->text_reveal_per_step, loop->sink, loop->sink_context);
             loop->window_active = true;
         } else {
             /* OP_MOVE and a resolved OP_WARP (position and, if a map
