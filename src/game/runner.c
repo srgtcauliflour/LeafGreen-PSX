@@ -71,5 +71,12 @@ LGRunnerStepResult lg_overworld_runner_step(LGOverworldRunner *runner,
     }
 
     lg_overworld_input_step(runner->player, runner->service->map, input);
+    const LGWarp *warp = lg_map_warp_at(runner->service->map, runner->player->x, runner->player->y,
+                                         runner->service->warps, runner->service->warp_count);
+    if (warp) {
+        lg_game_service_apply_warp(runner->service, warp);
+        sync_events_to_active_map(runner);
+        return LG_RUNNER_STEP_WARPED;
+    }
     return LG_RUNNER_STEP_IDLE;
 }

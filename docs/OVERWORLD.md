@@ -46,6 +46,28 @@ indirection into a caller's own script table (the same idea as
 `LGScriptTextFn`'s `text_id`), not a LeafGreen object-event id -- no ROM
 evidence maps real NPC/event ids yet.
 
+## Tile-triggered warps (`LGOverworldRunner`)
+
+`lg_map_warp_at()` already resolved a cell's warp, and `OP_WARP` already
+applied one from a script, but nothing fired a warp just from walking
+onto a tile -- OVERWORLD.md's "Map connections/warps" section explicitly
+deferred that policy. `LGGameService` gained
+`lg_game_service_apply_warp(svc, warp)`, the shared logic `OP_WARP`'s
+callback already used internally (move the player to
+`warp->dest_x`/`dest_y`, switch `svc->map`/`warps`/`warp_count` to a
+matching `LGMapEntry` if one is registered, record
+`has_pending_warp`/`pending_warp`), now exposed so a caller can trigger
+the same warp without a script.
+
+`LGOverworldRunner`'s free-roam step now checks the map cell the player
+just walked onto: if `lg_map_warp_at()` finds a warp there, it calls
+`lg_game_service_apply_warp()` immediately and returns
+`LG_RUNNER_STEP_WARPED` instead of `LG_RUNNER_STEP_IDLE`, re-syncing its
+own `events`/`event_count` to the new map the same way a script-driven
+warp already does. No button press or script involved -- this is how
+LeafGreen walks the player through a door tile. See
+`tests/host/test_runner.c`.
+
 ## Interact orchestrator (`lg/interact.h`)
 
 `lg_overworld_try_interact()` is the last piece connecting free-roam

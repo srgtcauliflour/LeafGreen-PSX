@@ -81,6 +81,17 @@ void lg_game_service_set_map_table(LGGameService *svc, const LGMapEntry *table,
    unsupported -- it becomes a script error, the same as any other
    missing service callback, rather than silently discarding the item. */
 void lg_game_service_set_inventory(LGGameService *svc, LGInventory *inv);
+/* Applies warp directly, the same way a resolved OP_WARP does: records
+   has_pending_warp/pending_warp, moves the player to
+   warp->dest_x/dest_y, and, if a registered LGMapEntry's map_id matches
+   warp->dest_map, switches svc->map/warps/warp_count to it too. No-op if
+   svc, svc->player or warp is NULL. This is the shared warp-application
+   logic OP_WARP's callback uses internally; it also lets a caller trigger
+   a warp without going through a script at all -- e.g. LGOverworldRunner
+   stepping onto a map cell whose LGMapCell.warp is set (see
+   lg_map_warp_at() in overworld.h), the same way LeafGreen walks the
+   player through a door tile with no separate button press or script. */
+void lg_game_service_apply_warp(LGGameService *svc, const LGWarp *warp);
 /* Registers this service's move/text/warp/item callbacks on vm. The
    service must outlive the VM (or be re-bound after any
    lg_script_init()), since the VM only stores the callback pointers and

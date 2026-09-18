@@ -140,6 +140,41 @@ int main(void) {
     assert(lg_overworld_runner_step(&runner4, &no_press, false) == LG_RUNNER_STEP_SCRIPT_DONE); /* OP_END */
     assert(runner4.events == dest_events && runner4.event_count == 1);
 
+    /* Free-roam movement onto a warp tile applies it immediately -- no
+       script or button press needed, the same way LeafGreen walks the
+       player through a door tile. It also follows a registered map
+       table entry, so the runner's own events sync to the new map. */
+    LGMapCell tile_warp_cells[9] = {0};
+    tile_warp_cells[0 * 3 + 1].warp = 3; /* (1,0) is a warp tile */
+    LGMap tile_warp_map = {3, 3, tile_warp_cells};
+    LGPlayer player5 = {1, 1, 0, 0}; /* one step below the warp tile */
+    LGGameService svc5;
+    LGScriptVM vm5;
+    LGWarp warps5[] = {{3, 55, 4, 4}};
+    lg_game_service_init(&svc5, &player5, &tile_warp_map, warps5, 1);
+
+    LGMapCell dest_cells5[4] = {0};
+    LGMap dest_map5 = {2, 2, dest_cells5};
+    LGObjectEvent dest_events5[] = {{0, 0, 42}};
+    LGMapEntry map_table5[] = {{55, &dest_map5, 0, 0, dest_events5, 1}};
+    lg_game_service_set_map_table(&svc5, map_table5, 1);
+
+    LGGameLoop loop5;
+    lg_game_loop_init(&loop5, &vm5, &svc5, widths, capture, &seen, lookup_text, 0, 10, 20, 0, 0, 0);
+    LGOverworldRunner runner5;
+    lg_overworld_runner_init(&runner5, &player5, &svc5, &vm5, &loop5, 0, 0, 0, 0);
+
+    LgInputState up_press = {0, LG_BUTTON_UP, 0};
+    assert(lg_overworld_runner_step(&runner5, &up_press, false) == LG_RUNNER_STEP_WARPED);
+    assert(player5.x == 4 && player5.y == 4);
+    assert(svc5.map == &dest_map5);
+    assert(runner5.events == dest_events5 && runner5.event_count == 1);
+    assert(svc5.has_pending_warp && svc5.pending_warp == &warps5[0]);
+
+    /* Landing on a plain tile (no warp) keeps returning idle as before. */
+    input.pressed = LG_BUTTON_RIGHT;
+    assert(lg_overworld_runner_step(&runner, &input, false) == LG_RUNNER_STEP_IDLE);
+
     /* Invalid arguments are rejected. */
     assert(lg_overworld_runner_step(0, &input, false) == LG_RUNNER_STEP_ERROR);
     LGOverworldRunner bad;

@@ -441,5 +441,23 @@ disagree. This is our own generic placeholder rule, not verified
 LeafGreen elevation behaviour. `tests/host/test_overworld.c` covers the
 new function directly and `lg_player_step()`'s elevation-blocked case.
 
+## Tile-triggered warps (2026-09-18)
+
+`lg_map_warp_at()` and `OP_WARP` both already existed, but nothing fired
+a warp from free-roam movement alone -- OVERWORLD.md's warps section
+explicitly deferred "a specific tile" as a later policy decision.
+Extracted the warp-application logic `service_warp` (the `OP_WARP`
+callback) already had into a new public `lg_game_service_apply_warp(svc,
+warp)` (service.h/c), so it can be called from outside a script too.
+
+`LGOverworldRunner`'s free-roam step now checks the cell the player just
+moved onto via `lg_map_warp_at()`; if it resolves a warp, the runner
+applies it immediately and returns a new `LG_RUNNER_STEP_WARPED` result
+(added to `LGRunnerStepResult`) instead of `LG_RUNNER_STEP_IDLE`,
+re-syncing `events`/`event_count` to the destination map the same way a
+script-driven warp already does. `tests/host/test_runner.c` covers
+stepping onto a warp tile (including following a registered
+`LGMapEntry`) and that a plain tile still returns idle.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
