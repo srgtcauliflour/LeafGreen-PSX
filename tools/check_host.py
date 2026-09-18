@@ -35,6 +35,8 @@ def main():
                'service': ['src/game/service.c', 'src/script/vm.c', 'src/overworld/overworld.c'],
                'loop': ['src/game/loop.c', 'src/game/service.c', 'src/game/window.c',
                         'src/game/dialogue.c', 'src/script/vm.c', 'src/overworld/overworld.c'],
+               'interact': ['src/game/interact.c', 'src/game/service.c', 'src/script/vm.c',
+                            'src/overworld/overworld.c'],
                'trade_record': ['src/game/trade_record.c'],
                'save': ['src/game/save.c'],
                'save_game': ['src/game/save_game.c', 'src/game/save.c'],
