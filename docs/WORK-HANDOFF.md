@@ -527,5 +527,48 @@ front regardless of whether the branch is taken, and a jump only moves
 three error paths (bad var index, bad jump target, truncated operand),
 mirroring the existing `OP_JUMP_IF_FLAG` coverage.
 
+## First real PS1 build (2026-09-18)
+
+Every prior session's work was validated only through
+`tools/check_host.py`'s host-only scaffolding -- no PS1 toolchain had
+ever actually been available to build `CMakeLists.txt`'s
+`leafgreen_psx` target. `tools/psn00bsdk/setup.sh` (new) builds a
+bare-metal `mipsel-none-elf` GCC/binutils toolchain from source (per
+PSn00bSDK's own `doc/toolchain.md`, since a prebuilt release wasn't
+reachable here) and PSn00bSDK itself; `.claude/hooks/session-start.sh` +
+`.claude/settings.json` wire it into a Claude Code on the web
+`SessionStart` hook so future sessions provision it automatically. See
+`docs/BUILD-LOCAL.md`'s new "Building the toolchain from source"
+subsection for details.
+
+With that toolchain, `leafgreen_psx.elf`/`.exe`/`.bin`/`.cue` built and
+linked successfully for the first time -- a real MIPS PS-EXE
+(`file` confirms `Sony Playstation executable`), not a host stand-in.
+Fixed one `-Wsign-compare` warning in `inventory.c` this GCC raised that
+host `cc` hadn't (an int/uint16_t subtraction pattern GCC 12 flags as a
+disguised bitwise-complement comparison; rewritten as a widened-addition
+overflow check).
+
+This is a build/link milestone only, not M0 native-proof progress: the
+executable is still the pre-existing debug-HUD bring-up code, no
+LeafGreen ROM data is compiled in, and the M0-ACCEPTANCE.md "Runtime
+gate"/"Native proof" checklist items still need an actual boot. Tried
+the repo's own `tools/runtime/check_ps1.py` headless smoke path with the
+only PS1 libretro core reachable via this environment's package manager
+(`libretro-beetle-psx`, Mednafen's core): it has no HLE BIOS fallback
+and refuses to boot without an actual PS1 BIOS ROM dump, which nobody
+supplied and which was not sourced (Sony's copyrighted firmware, a
+separate concern from a game ROM) -- so the smoke test fails at core
+init, before reaching `leafgreen_psx` code at all. Recorded in
+BUILD-LOCAL.md's Runtime gate section as an open gap for whoever runs
+this with their own BIOS dump or an HLE-capable core.
+
+The user separately supplied their own verified LeafGreen (USA) Rev 1
+ROM dump for local reference/tooling verification (SHA-1
+`7862c67bdecbe21d1d69ce082ce34327e1c6ed5e`, matches
+`tools/romverify/verify_leafgreen.py`'s expected target exactly). Kept
+at `local-roms/` (already gitignored), never committed, not otherwise
+used yet -- no extraction has happened against it.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
