@@ -148,5 +148,45 @@ int main(void) {
     assert(lg_script_step(&vm_full) == LG_SCRIPT_ERROR);
     assert(!svc_full.has_pending_item);
 
+    /* OP_ITEM_TAKE blocks the same way, actually removing from the
+       inventory (not just recording the request). */
+    LGInventorySlot take_slots[1] = {{6, 5}}; /* already holding 5 of item 6 */
+    LGInventory take_inv = {take_slots, 1};
+    LGGameService svc_take;
+    LGScriptVM vm_take;
+    lg_game_service_init(&svc_take, &player_z, &map, 0, 0);
+    lg_game_service_set_inventory(&svc_take, &take_inv);
+    const uint8_t item_take_script[] = {10,6,0x02,0x00, 0}; /* OP_ITEM_TAKE id=6 qty=2 */
+    lg_script_init(&vm_take, item_take_script, sizeof item_take_script);
+    lg_game_service_bind(&svc_take, &vm_take);
+    assert(lg_script_step(&vm_take) == LG_SCRIPT_BLOCKED);
+    assert(svc_take.has_pending_item_take && svc_take.pending_item_take_id == 6);
+    assert(svc_take.pending_item_take_quantity == 2);
+    assert(lg_inventory_count(&take_inv, 6) == 3);
+    lg_game_service_clear_pending(&svc_take);
+    assert(!svc_take.has_pending_item_take);
+    lg_script_unblock(&vm_take);
+    assert(lg_script_step(&vm_take) == LG_SCRIPT_DONE);
+
+    /* No inventory registered, or removing more than the bag holds, are
+       both script errors -- OP_ITEM_TAKE never silently no-ops. */
+    LGGameService svc_no_inv_take;
+    lg_game_service_init(&svc_no_inv_take, &player_z, &map, 0, 0);
+    LGScriptVM vm_no_inv_take;
+    lg_script_init(&vm_no_inv_take, item_take_script, sizeof item_take_script);
+    lg_game_service_bind(&svc_no_inv_take, &vm_no_inv_take);
+    assert(lg_script_step(&vm_no_inv_take) == LG_SCRIPT_ERROR);
+
+    LGInventorySlot short_slots[1] = {{6, 1}}; /* only 1, script asks for 2 */
+    LGInventory short_inv = {short_slots, 1};
+    LGGameService svc_short;
+    lg_game_service_init(&svc_short, &player_z, &map, 0, 0);
+    lg_game_service_set_inventory(&svc_short, &short_inv);
+    LGScriptVM vm_short;
+    lg_script_init(&vm_short, item_take_script, sizeof item_take_script);
+    lg_game_service_bind(&svc_short, &vm_short);
+    assert(lg_script_step(&vm_short) == LG_SCRIPT_ERROR);
+    assert(!svc_short.has_pending_item_take);
+
     return 0;
 }
