@@ -13,8 +13,12 @@
    function's own contract. When more than one direction is pressed in
    the same frame, up/down/left/right is the priority order used to pick
    one -- a simple placeholder policy, not verified LeafGreen input
-   handling (e.g. no turn-then-walk on first press, no running/biking);
-   real semantics need ROM evidence. Returns true if a direction was
+   handling (e.g. no turn-then-walk on first press); real semantics need
+   ROM evidence. While LG_BUTTON_B is held (LeafGreen's Running Shoes
+   button, not a bike), the step uses lg_player_run_step() instead of
+   lg_player_step() -- same grid step, just a faster LGPlayer.moving
+   presentation hint; there is still no biking, and no ROM-verified
+   running speed backs this number. Returns true if a direction was
    pressed and lg_player_step() was called (whether or not the step was
    actually allowed), false if no directional button was newly pressed or
    any argument is NULL. */

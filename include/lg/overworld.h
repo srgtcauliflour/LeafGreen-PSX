@@ -23,6 +23,11 @@ typedef struct { int16_t x,y; int8_t facing; uint8_t moving; } LGPlayer;
 /* Placeholder tile-slide duration in frames for LGPlayer.moving: no
    ROM/hardware-verified LeafGreen movement timing backs this number yet. */
 #define LG_PLAYER_SLIDE_FRAMES 4
+/* Placeholder running-speed tile-slide duration (used by lg_player_run_step()),
+   half of LG_PLAYER_SLIDE_FRAMES -- again no ROM/hardware-verified
+   LeafGreen running speed backs this number, only that OVERWORLD.md
+   flagged "running, biking" as unfinished. */
+#define LG_PLAYER_RUN_SLIDE_FRAMES (LG_PLAYER_SLIDE_FRAMES/2)
 /* dest_map is a logical resource id (see resource.h), not a pointer, so a
    warp table can be authored/serialized without wiring maps together. */
 typedef struct { uint8_t id; uint16_t dest_map; int16_t dest_x, dest_y; } LGWarp;
@@ -68,6 +73,15 @@ int lg_map_can_enter_from(const LGMap *map, int from_x, int from_y,
    blocked rather than landing partway. moving is set to twice
    LG_PLAYER_SLIDE_FRAMES for a ledge jump, since it covers two cells. */
 void lg_player_step(LGPlayer *p, const LGMap *map, int dx, int dy);
+/* Identical to lg_player_step() (same collision/elevation/ledge rules,
+   same dx/dy shape), except a step that actually moves the player sets
+   p->moving to LG_PLAYER_RUN_SLIDE_FRAMES (half of LG_PLAYER_SLIDE_FRAMES)
+   instead, and a ledge jump to twice that -- a faster presentation hint
+   for a "running" input state, not a different grid-step distance or
+   pacing (this scaffolding has never paced steps by frames at all, only
+   hinted a renderer's slide animation). No ROM/hardware-verified
+   LeafGreen running speed backs this number. */
+void lg_player_run_step(LGPlayer *p, const LGMap *map, int dx, int dy);
 /* Counts down p->moving by one frame if it is nonzero. No-op at 0 or on
    a NULL player. */
 void lg_player_animate_tick(LGPlayer *p);

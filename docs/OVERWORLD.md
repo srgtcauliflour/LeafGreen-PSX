@@ -46,6 +46,23 @@ indirection into a caller's own script table (the same idea as
 `LGScriptTextFn`'s `text_id`), not a LeafGreen object-event id -- no ROM
 evidence maps real NPC/event ids yet.
 
+## Running (`lg_player_run_step`)
+
+`lg_overworld_input_step()`'s own doc comment used to flag "no
+running/biking" as a gap. `lg_player_run_step(player, map, dx, dy)`
+(overworld.h/c) is identical to `lg_player_step()` -- same
+collision/elevation/ledge rules, same dx/dy shape -- except a step that
+actually moves the player sets `LGPlayer.moving` to
+`LG_PLAYER_RUN_SLIDE_FRAMES` (half of `LG_PLAYER_SLIDE_FRAMES`) instead,
+and a ledge jump to twice that. This is purely a faster presentation
+hint for a renderer's slide animation, not a different grid-step
+distance or any new pacing -- this scaffolding has never paced steps by
+frames at all. `lg_overworld_input_step()` now calls it instead of
+`lg_player_step()` while `LG_BUTTON_B` (LeafGreen's Running Shoes
+button) is held. There is still no biking, and no ROM/hardware-verified
+LeafGreen running speed backs `LG_PLAYER_RUN_SLIDE_FRAMES`. See
+`tests/host/test_overworld.c` and `tests/host/test_input_control.c`.
+
 ## Ledges (`LGMapCell.ledge`)
 
 `LGMapCell` gained a `ledge` field: 0 means not a ledge, otherwise it
