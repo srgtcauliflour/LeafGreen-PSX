@@ -567,8 +567,45 @@ The user separately supplied their own verified LeafGreen (USA) Rev 1
 ROM dump for local reference/tooling verification (SHA-1
 `7862c67bdecbe21d1d69ce082ce34327e1c6ed5e`, matches
 `tools/romverify/verify_leafgreen.py`'s expected target exactly). Kept
-at `local-roms/` (already gitignored), never committed, not otherwise
-used yet -- no extraction has happened against it.
+at `local-roms/` (already gitignored), never committed. It was used
+locally to validate the new tooling below (never to extract or commit
+any real LeafGreen offsets/data to this public repo -- see PORTING.md's
+redistribution boundary).
+
+## Generic GBA decompression + text charmap tooling (2026-09-18)
+
+Two new codec modules, both generic/hardware-documented (no
+LeafGreen-specific offsets or extracted data embedded), extending the
+asset pipeline (`docs/ASSET-PIPELINE.md`) toward real map/text
+extraction:
+
+- `tools/gfxconv/gba_compress.py`: LZ77/LZSS and Huffman decompression,
+  the two general-purpose codecs the GBA BIOS itself provides (SWI
+  0x11/0x13) and that most compressed ROM tile/tilemap/text data uses.
+  Tested against synthetic streams; also locally validated (not
+  committed) by scanning the user's verified ROM for LZ77-headed blocks
+  -- of ~6300 candidates matching the header pattern, ~3725 decompressed
+  cleanly to their claimed size, strong evidence the codec is correct
+  against real GBA-compressed data.
+- `tools/textconv/charmap.py`: the Gen3 (RSE/FRLG) international text
+  charmap (byte<->character table) plus `decode_text()`/`encode_text()`,
+  reconstructed from the console's well-documented, widely
+  reverse-engineered Gen3 text format -- a functional encoding table,
+  not copyrighted expression. `tools/textconv/extract_text.py` extends
+  `tools/assets/extract.py`'s manifest contract with a `"text"` asset
+  kind that decodes through it. Also locally validated (not committed):
+  scanning the verified ROM for charmap-plausible, EOS-terminated byte
+  runs decoded them into coherent, grammatical English game text,
+  confirming the table's correctness.
+
+Both new `tools/*/test_*.py` suites are wired into
+`tools/check_host.py`'s discovery loop (`textconv` added alongside the
+existing suites); `manifest.py`'s `KINDS` gained `"text"`. No real
+offsets, extracted strings, or other LeafGreen-specific data were
+committed anywhere in this work -- only the generic codecs, consistent
+with this repo's redistribution boundary. Finding and verifying real
+map/dialogue/font offsets against the ROM is deferred to future,
+non-public work (see the ROM note above).
 
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
