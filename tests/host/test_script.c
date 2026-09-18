@@ -255,6 +255,32 @@ int main(void) {
     lg_script_init(&v, truncated_jump, sizeof truncated_jump);
     assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
 
+    /* OP_JUMP_IF_VAR is the same idea as OP_JUMP_IF_FLAG, but compares a
+       full 16-bit var value instead of a single flag bit -- this is what
+       lets a script branch on OP_CHOICE's result. */
+    const uint8_t varset[] = {1,5,1,0, 12,5,1,0,10,0, 0}; /* OP_SET var5=1, jump-if-var5==1 to pc 10 (OP_END) */
+    lg_script_init(&v, varset, sizeof varset);
+    assert(lg_script_step(&v) == LG_SCRIPT_RUNNING); /* OP_SET var5=1 */
+    assert(lg_script_step(&v) == LG_SCRIPT_RUNNING); /* jump taken, pc moves to 10 */
+    assert(v.pc == 10);
+    assert(lg_script_step(&v) == LG_SCRIPT_DONE); /* OP_END at pc 10 */
+
+    const uint8_t novarjump[] = {12,5,2,0,6,0, 0}; /* var 5 is 0, expects 2: falls through */
+    lg_script_init(&v, novarjump, sizeof novarjump);
+    assert(lg_script_step(&v) == LG_SCRIPT_RUNNING); /* no jump taken */
+    assert(v.pc == 6);
+    assert(lg_script_step(&v) == LG_SCRIPT_DONE);
+
+    const uint8_t bad_var_index[] = {12,32,0,0,0,0}; /* var index 32 is out of range */
+    lg_script_init(&v, bad_var_index, sizeof bad_var_index);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    const uint8_t bad_var_jump_target[] = {12,0,0,0,99,0}; /* target 99 >= size */
+    lg_script_init(&v, bad_var_jump_target, sizeof bad_var_jump_target);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+    const uint8_t truncated_var_jump[] = {12,0,0,0,0}; /* missing addr_hi */
+    lg_script_init(&v, truncated_var_jump, sizeof truncated_var_jump);
+    assert(lg_script_step(&v) == LG_SCRIPT_ERROR);
+
     /* Unblocking anything but a blocked VM is a no-op. */
     lg_script_init(&v, code, sizeof code);
     lg_script_unblock(&v);

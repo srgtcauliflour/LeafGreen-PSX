@@ -2,11 +2,15 @@
 /* OP_FLAG_SET: id(1), value(1, must be 0 or 1) -- sets/clears flag bit id.
    OP_JUMP_IF_FLAG: id(1), value(1, must be 0 or 1), addr_lo(1), addr_hi(1)
    -- jumps to the little-endian absolute address (must be < size) when
-   flag id currently equals value, otherwise falls through. Both are pure
-   VM state, unlike the callback-driven service opcodes below. */
+   flag id currently equals value, otherwise falls through.
+   OP_JUMP_IF_VAR: index(1), value_lo(1), value_hi(1), addr_lo(1),
+   addr_hi(1) -- same idea, but compares vars[index] (a full 16-bit
+   value, little-endian) instead of a single flag bit; this is what lets
+   a script branch on OP_CHOICE's result. All are pure VM state, unlike
+   the callback-driven service opcodes below. */
 enum { OP_END=0x00, OP_SET=0x01, OP_ADD=0x02, OP_WAIT=0x03, OP_TEXT=0x04,
        OP_MOVE=0x05, OP_WARP=0x06, OP_FLAG_SET=0x07, OP_JUMP_IF_FLAG=0x08,
-       OP_ITEM=0x09, OP_ITEM_TAKE=0x0a, OP_CHOICE=0x0b };
+       OP_ITEM=0x09, OP_ITEM_TAKE=0x0a, OP_CHOICE=0x0b, OP_JUMP_IF_VAR=0x0c };
 static bool flag_get(const LGScriptVM *v,uint8_t id){return (v->flags[id/8]>>(id%8))&1;}
 static void flag_put(LGScriptVM *v,uint8_t id,uint8_t value){if(value)v->flags[id/8]|=(uint8_t)(1u<<(id%8));else v->flags[id/8]&=(uint8_t)~(1u<<(id%8));}
 void lg_script_init(LGScriptVM *v,const uint8_t*c,size_t n){if(!v)return;v->code=c;v->size=n;v->pc=0;for(int i=0;i<32;i++)v->vars[i]=0;for(int i=0;i<32;i++)v->flags[i]=0;v->status=LG_SCRIPT_RUNNING;v->text_fn=0;v->text_context=0;v->move_fn=0;v->move_context=0;v->warp_fn=0;v->warp_context=0;v->item_fn=0;v->item_context=0;v->item_take_fn=0;v->item_take_context=0;v->choice_fn=0;v->choice_context=0;}
@@ -32,6 +36,7 @@ LGScriptStatus lg_script_step(LGScriptVM *v){
  case OP_CHOICE:{if(v->size-v->pc<2){v->status=LG_SCRIPT_ERROR;break;}uint8_t id=v->code[v->pc++];uint8_t vi=v->code[v->pc++];if(vi>=32){v->status=LG_SCRIPT_ERROR;break;}if(!v->choice_fn||!v->choice_fn(v->choice_context,id,vi)){v->status=LG_SCRIPT_ERROR;break;}v->status=LG_SCRIPT_BLOCKED;break;}
  case OP_FLAG_SET:{if(v->size-v->pc<2){v->status=LG_SCRIPT_ERROR;break;}uint8_t id=v->code[v->pc++];uint8_t value=v->code[v->pc++];if(value>1){v->status=LG_SCRIPT_ERROR;break;}flag_put(v,id,value);break;}
  case OP_JUMP_IF_FLAG:{if(v->size-v->pc<4){v->status=LG_SCRIPT_ERROR;break;}uint8_t id=v->code[v->pc++];uint8_t value=v->code[v->pc++];uint16_t addr=v->code[v->pc];addr|=(uint16_t)((uint16_t)v->code[v->pc+1]<<8);v->pc+=2;if(value>1||addr>=v->size){v->status=LG_SCRIPT_ERROR;break;}if(flag_get(v,id)==value)v->pc=addr;break;}
+ case OP_JUMP_IF_VAR:{if(v->size-v->pc<5){v->status=LG_SCRIPT_ERROR;break;}uint8_t i=v->code[v->pc++];uint16_t value=v->code[v->pc];value|=(uint16_t)((uint16_t)v->code[v->pc+1]<<8);v->pc+=2;uint16_t addr=v->code[v->pc];addr|=(uint16_t)((uint16_t)v->code[v->pc+1]<<8);v->pc+=2;if(i>=32||addr>=v->size){v->status=LG_SCRIPT_ERROR;break;}if(v->vars[i]==value)v->pc=addr;break;}
  case OP_SET:case OP_ADD:{if(v->size-v->pc<3){v->status=LG_SCRIPT_ERROR;break;}uint8_t i=v->code[v->pc++];uint16_t x=v->code[v->pc];x|=(uint16_t)((uint16_t)v->code[v->pc+1]<<8);v->pc+=2;if(i>=32){v->status=LG_SCRIPT_ERROR;break;}if(op==OP_SET)v->vars[i]=x;else v->vars[i]+=x;break;}
  default:v->status=LG_SCRIPT_ERROR;break;
  }return v->status;

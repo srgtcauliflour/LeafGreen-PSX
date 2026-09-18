@@ -101,10 +101,10 @@ blocks the VM exactly like `OP_TEXT` does: presenting a prompt (e.g.
 Yes/No) and reading the player's selection genuinely spans multiple
 frames, so the caller drives its own menu/window, writes the selected
 option directly into `vm->vars[var_index]` once the player confirms, and
-only then calls `lg_script_unblock()`. There is no dedicated "jump if
-var equals" opcode yet, so branching on the result is left to the
-caller/script author for now -- this establishes the blocking/callback
-mechanism, not a full menu/branching system.
+only then calls `lg_script_unblock()`. `OP_JUMP_IF_VAR` (see the Flags
+section below) is what a script uses to branch on that result -- this
+establishes the blocking/callback mechanism plus that branching
+primitive, not a full menu system.
 
 `LGGameService` wires this the same way as `OP_TEXT`: a resolved
 `OP_CHOICE` only records `has_pending_choice`/`pending_choice_id`/
@@ -126,6 +126,14 @@ checked against the code size up front, even when the branch isn't taken --
 consistent with how `OP_SET`/`OP_ADD` validate their var index regardless of
 which branch executes. A jump only moves `pc`; the instruction at the target
 executes on the following `lg_script_step()` call, not the same one.
+
+`OP_JUMP_IF_VAR` (index, value, little-endian absolute address) is the
+same idea, but compares a full 16-bit `vars[index]` value instead of a
+single flag bit -- this is what lets a script branch on `OP_CHOICE`'s
+result (the caller writes the selected option into a var; the script
+then jumps on it). Same rules as `OP_JUMP_IF_FLAG`: the var index and
+jump target are both bounds-checked up front regardless of whether the
+branch is taken, and a jump only moves `pc`.
 
 ## Game service integration (`lg/service.h`)
 
