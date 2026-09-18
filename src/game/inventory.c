@@ -5,7 +5,7 @@ bool lg_inventory_add(LGInventory *inv, uint8_t item_id, uint16_t quantity) {
     LGInventorySlot *empty = 0;
     for (size_t i = 0; i < inv->slot_count; ++i) {
         if (inv->slots[i].item_id == item_id) {
-            if (quantity > (uint16_t)(0xffff - inv->slots[i].quantity)) return false;
+            if ((uint32_t)inv->slots[i].quantity + quantity > 0xffffu) return false;
             inv->slots[i].quantity = (uint16_t)(inv->slots[i].quantity + quantity);
             return true;
         }
