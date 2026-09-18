@@ -316,5 +316,17 @@ round trip: the service's map switches immediately when the warp
 resolves, but the runner's events only follow once the script actually
 finishes.
 
+## Script VM item callback (2026-09-18)
+
+`LGScriptVM` gained `OP_ITEM`/`lg_script_set_item_fn()`: same blocking
+pattern as `OP_TEXT`/`OP_MOVE`/`OP_WARP`, passing an item id and a 16-bit
+quantity. This completes the exact list SCRIPT-VM.md named from the
+start -- "text, movement, flags, warps, items" -- but has no
+`LGGameService` wiring yet, since no inventory model exists anywhere in
+this codebase; that's expected to arrive the same way `OP_TEXT`'s did,
+in a later PR once there's something real to wire it to.
+`tests/host/test_script.c` covers block/unblock, a rejecting callback, a
+missing callback and a truncated operand.
+
 Keep ROMs, BIOS files and generated proprietary assets outside Git. Memory-card
 trading remains M10; GBA network/link emulation remains excluded.
