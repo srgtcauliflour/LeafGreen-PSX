@@ -104,7 +104,10 @@ executes on the following `lg_script_step()` call, not the same one.
 
 `LGGameService` (`src/game/service.c`) wires `OP_MOVE`/`OP_TEXT`/`OP_WARP`
 to the real portable overworld model via `lg_game_service_bind(svc, vm)`:
-`OP_MOVE` resolves through `lg_map_can_enter()`/`lg_player_step()`, `OP_WARP`
+`OP_MOVE` resolves through `lg_map_can_enter_from()`/`lg_player_step()` (so
+an elevation-incompatible move is a script error too, same as a
+collision-blocked one -- see OVERWORLD.md's "Elevation-gated movement"),
+`OP_WARP`
 searches a caller-supplied `LGWarp` table for a matching id. Both are
 resolved synchronously today (there is no multi-frame tile slide or async CD
 warp yet), so a caller may call `lg_script_unblock()` immediately after a

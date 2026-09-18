@@ -37,5 +37,33 @@ int main(void){
  assert(!lg_object_event_facing(0,events,2));
  assert(!lg_object_event_facing(&q,0,2));
 
+ /* Elevation gating: nonzero elevations must match exactly to move
+    between them; elevation 0 on either side is a wildcard that always
+    connects. Grid indices are y*width+x on a 3x3 map. */
+ LGMapCell ec[9]={0};
+ ec[4].elevation=1; /* (1,1): elevation 1 */
+ ec[5].elevation=2; /* (2,1): elevation 2, mismatched neighbor */
+ ec[7].elevation=1; /* (1,2): elevation 1, matching neighbor */
+ LGMap em={3,3,ec};
+ assert(lg_map_can_enter_from(&em,1,1,2,1)==0); /* 1 -> 2: mismatched */
+ assert(lg_map_can_enter_from(&em,1,1,1,2)==1); /* 1 -> 1: matches */
+ assert(lg_map_can_enter_from(&em,1,1,0,1)==1); /* 1 -> 0: wildcard dest */
+ assert(lg_map_can_enter_from(&em,0,0,1,1)==1); /* 0 -> 1: wildcard source */
+ assert(lg_map_can_enter_from(&em,-1,-1,1,1)==1); /* no source context: only collision checked */
+ assert(lg_map_can_enter_from(&em,1,1,-1,0)==0); /* destination out of bounds */
+ ec[5].collision=1; /* (2,1) also blocked -- elevation match can't override collision */
+ ec[5].elevation=1;
+ assert(lg_map_can_enter_from(&em,1,1,2,1)==0);
+
+ /* lg_player_step() itself refuses an elevation-incompatible step, same
+    as a collision-blocked one: it turns to face it without moving. */
+ LGMapCell sc[9]={0};
+ sc[4].elevation=1; /* (1,1) */
+ sc[5].elevation=2; /* (2,1): mismatched */
+ LGMap sm={3,3,sc};
+ LGPlayer r={1,1,0,0};
+ lg_player_step(&r,&sm,1,0);
+ assert(r.x==1 && r.y==1 && r.facing==1 && r.moving==0);
+
  return 0;
 }

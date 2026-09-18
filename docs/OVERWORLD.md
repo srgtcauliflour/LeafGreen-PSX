@@ -74,4 +74,24 @@ block on `moving` being nonzero. `LG_PLAYER_SLIDE_FRAMES` is a placeholder
 duration with no ROM/hardware-verified LeafGreen movement timing behind
 it yet.
 
+## Elevation-gated movement (`lg_map_can_enter_from`)
+
+`LGMapCell.elevation` sat unused since M0's very first commit, even
+though OVERWORLD.md already flagged "elevation interactions" as
+unfinished. `lg_map_can_enter_from(map, from_x, from_y, to_x, to_y)`
+extends the plain bounds+collision check (`lg_map_can_enter`) with a
+generic elevation rule: elevation 0 is a wildcard on either end (e.g. a
+bridge or stairs tile that connects any level), otherwise the source and
+destination cells' elevation values must match exactly to move between
+them. Missing source-cell context (e.g. an out-of-bounds `from_x`/`from_y`)
+skips the elevation comparison and only checks the destination's
+collision. `lg_player_step()` now uses this instead of the plain check,
+so it also turns-without-moving on an elevation-incompatible step, same
+as a collision-blocked one; `LGGameService`'s `service_move` (the
+`OP_MOVE` backing) was updated to match, so a script's move request is
+rejected the same way a free-roam step would be, keeping the two paths
+consistent. This is our own generic placeholder rule, not verified
+LeafGreen elevation behaviour -- no ROM evidence backs these exact
+semantics yet. See `tests/host/test_overworld.c`.
+
 This is preparatory work for LGPSX-012 through LGPSX-018; it is not marked complete until converted real M0 maps render and behave correctly.
